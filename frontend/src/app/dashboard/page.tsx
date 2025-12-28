@@ -6,13 +6,8 @@ import { StatCard, TableRow } from '@/src/components/Stats';
 
 export default function DashboardPage() {
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-
-      <main className="flex-1 flex flex-col">
-        <Header />
-
-        <div className="p-8 overflow-y-auto">
+    <main className="flex-1 flex flex-col">
+         <div className="p-8 overflow-y-auto">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-800">Bảng điều khiển</h2>
             <p className="text-gray-500">Hệ thống đang hoạt động ổn định.</p>
@@ -49,6 +44,5 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
-    </div>
   );
 }
