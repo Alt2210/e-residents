@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config'; 
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ChatbotModule } from './chatbot/chatbot.module'; 
 
 // Import các Module chức năng
 import { UsersModule } from './users/users.module';
