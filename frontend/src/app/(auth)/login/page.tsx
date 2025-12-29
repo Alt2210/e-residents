@@ -28,7 +28,7 @@ export default function LoginPage() {
   }, [images.length]);
 
   // HÀM XỬ LÝ ĐĂNG NHẬP
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
