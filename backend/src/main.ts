@@ -11,7 +11,7 @@ function setupApp(app: INestApplication) {
 
   // 2. Cấu hình CORS - QUAN TRỌNG ĐỂ SỬA LỖI CỦA BẠN
   app.enableCors({
-    origin: ['http://localhost:3000'], // Cho phép frontend của bạn
+    origin: ['http://localhost:3000', 'https://e-residents-alpha.vercel.app'], // Cho phép frontend của bạn
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
