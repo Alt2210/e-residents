@@ -57,7 +57,7 @@ export class CreatePersonDto {
   @IsOptional()
   noiLamViec?: string;
 
-  @IsMongoId()
+  @IsString()
   @IsNotEmpty()
   householdId: string;
 

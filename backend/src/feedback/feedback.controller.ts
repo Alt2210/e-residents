@@ -29,25 +29,25 @@ import { Types } from 'mongoose';
 export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
-  // Ghi nhận phản ánh/kiến nghị
+  // 1. CHUYỂN ENDPOINT SEARCH LÊN TRÊN
+  @Get('search')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  async search(@Query() searchDto: FeedbackSearchDto) {
+    return this.feedbackService.search(searchDto);
+  }
+
+  // 2. CÁC ENDPOINT KHÁC (POST, PATCH...)
   @Post()
   @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
   async create(@Body() createDto: CreateFeedbackDto) {
     return this.feedbackService.create(createDto);
   }
 
-  // Xem chi tiết
+  // 3. ENDPOINT CHI TIẾT CÓ THAM SỐ :id PHẢI ĐỂ DƯỚI CÙNG
   @Get(':id')
   @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
   async getDetail(@Param('id') id: string) {
     return this.feedbackService.getDetail(id);
-  }
-
-  // Tra cứu/tìm kiếm
-  @Get('search')
-  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
-  async search(@Query() searchDto: FeedbackSearchDto) {
-    return this.feedbackService.search(searchDto);
   }
 
   // Cập nhật trạng thái

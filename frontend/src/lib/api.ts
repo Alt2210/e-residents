@@ -8,6 +8,11 @@ const api = axios.create({
   },
 });
 
+export const getStatistics = async () => {
+  const response = await api.get('/statistics');
+  return response.data;
+};
+
 // Tự động thêm Token vào Header nếu đã đăng nhập
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');

@@ -38,14 +38,17 @@ export class PersonsService {
   }
 
   // Thêm nhân khẩu thường (nhập hộ)
-  async create(createPersonDto: CreatePersonDto): Promise<PersonDocument> {
-    // Kiểm tra hộ khẩu tồn tại
-    const household = await this.householdModel.findById(createPersonDto.householdId).exec();
+  async create(createPersonDto: any): Promise<PersonDocument> {
+    // 1. Tìm hộ khẩu dựa trên số hộ khẩu (soHoKhau) thay vì ID
+    const household = await this.householdModel.findOne({ 
+      soHoKhau: createPersonDto.householdId 
+    }).exec();
+
     if (!household) {
-      throw new NotFoundException('Không tìm thấy hộ khẩu');
+      throw new NotFoundException(`Không tìm thấy hộ khẩu có số: ${createPersonDto.householdId}`);
     }
 
-    // Kiểm tra CCCD unique (nếu có)
+    // 2. Kiểm tra CCCD unique
     if (createPersonDto.soCCCD) {
       const existing = await this.personModel.findOne({ soCCCD: createPersonDto.soCCCD }).exec();
       if (existing) {
@@ -53,9 +56,10 @@ export class PersonsService {
       }
     }
 
+    // 3. Gán lại ID thực sự của MongoDB vào dữ liệu trước khi lưu
     const person = new this.personModel({
       ...createPersonDto,
-      householdId: new Types.ObjectId(createPersonDto.householdId),
+      householdId: household._id, // Lấy ID hệ thống từ hộ khẩu vừa tìm được
       trangThai: 'THUONG_TRU',
     });
 

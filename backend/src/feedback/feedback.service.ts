@@ -103,7 +103,7 @@ export class FeedbackService {
     return targetFeedback.save();
   }
 
-  // Tra cứu/tìm kiếm phản ánh/kiến nghị
+  // Tra cứu/tìm kiếm phản ánh/kiến nghị - ĐÃ TỐI ƯU ĐỂ TRÁNH LỖI 500
   async search(searchDto: FeedbackSearchDto) {
     const {
       nguoiPhanAnh,
@@ -116,50 +116,70 @@ export class FeedbackService {
       limit = 10,
     } = searchDto;
 
-    const query: any = { mergedTo: { $exists: false } }; // Chỉ lấy feedback chưa bị gộp
+    // Khởi tạo mảng điều kiện bắt buộc: Chỉ lấy feedback chưa bị gộp
+    const andConditions: any[] = [
+      { 
+        $or: [
+          { mergedTo: { $exists: false } },
+          { mergedTo: null } 
+        ]
+      }
+    ];
 
+    // Thêm điều kiện lọc theo tên người phản ánh
     if (nguoiPhanAnh) {
-      query.nguoiPhanAnh = { $regex: nguoiPhanAnh, $options: 'i' };
+      andConditions.push({ nguoiPhanAnh: { $regex: nguoiPhanAnh, $options: 'i' } });
     }
 
+    // Thêm điều kiện lọc theo phân loại
     if (phanLoai) {
-      query.phanLoai = phanLoai;
+      andConditions.push({ phanLoai });
     }
 
+    // Thêm điều kiện lọc theo trạng thái
     if (trangThai) {
-      query.trangThai = trangThai;
+      andConditions.push({ trangThai });
     }
 
+    // Thêm điều kiện lọc theo ngày tháng
     if (fromDate || toDate) {
-      query.ngayPhanAnh = {};
-      if (fromDate) {
-        query.ngayPhanAnh.$gte = new Date(fromDate);
-      }
-      if (toDate) {
-        query.ngayPhanAnh.$lte = new Date(toDate);
-      }
+      const dateQuery: any = {};
+      if (fromDate) dateQuery.$gte = new Date(fromDate);
+      if (toDate) dateQuery.$lte = new Date(toDate);
+      andConditions.push({ ngayPhanAnh: dateQuery });
     }
 
-    if (keyword) {
-      query.$or = [
-        { nguoiPhanAnh: { $regex: keyword, $options: 'i' } },
-        { noiDung: { $regex: keyword, $options: 'i' } },
-      ];
+    // Xử lý từ khóa tìm kiếm chung mà không làm mất điều kiện mergedTo
+    if (keyword && keyword.trim() !== "") {
+      andConditions.push({
+        $or: [
+          { nguoiPhanAnh: { $regex: keyword.trim(), $options: 'i' } },
+          { noiDung: { $regex: keyword.trim(), $options: 'i' } },
+        ],
+      });
     }
 
+    // Kết hợp tất cả bằng $and
+    const query = andConditions.length > 0 ? { $and: andConditions } : {};
     const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.feedbackModel.find(query).skip(skip).limit(limit).sort({ ngayPhanAnh: -1 }).exec(),
-      this.feedbackModel.countDocuments(query).exec(),
-    ]);
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    try {
+      const [data, total] = await Promise.all([
+        this.feedbackModel.find(query).skip(skip).limit(limit).sort({ ngayPhanAnh: -1 }).exec(),
+        this.feedbackModel.countDocuments(query).exec(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      console.error("Database error in Feedback search:", error);
+      throw new BadRequestException('Lỗi trong quá trình truy vấn dữ liệu. Vui lòng kiểm tra lại tham số.');
+    }
   }
 
   // Xem chi tiết phản ánh/kiến nghị

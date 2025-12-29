@@ -60,43 +60,43 @@ export const Sidebar = () => {
         <NavItem 
           icon={<Users size={20} />} 
           label="Quản lý nhân khẩu" 
-          href="/dashboard/citizens" 
-          active={isActive('/dashboard/citizens')} 
+          href="/citizens" 
+          active={isActive('/citizens')} 
         />
         <NavItem 
           icon={<Home size={20} />} 
           label="Quản lý hộ khẩu" 
-          href="/dashboard/households" 
-          active={isActive('/dashboard/households')} 
+          href="/households" 
+          active={isActive('/households')} 
         />
         <NavItem 
           icon={<FileText size={20} />} 
           label="Tạm trú / Tạm vắng" 
-          href="/dashboard/residence" 
-          active={isActive('/dashboard/residence')} 
+          href="/residence" 
+          active={isActive('/residence')} 
         />
         
         {/* Phần thêm mới 1: Phản ánh, kiến nghị */}
         <NavItem 
           icon={<MessageSquare size={20} />} 
           label="Phản ánh, kiến nghị" 
-          href="/dashboard/feedback" 
-          active={isActive('/dashboard/feedback')} 
+          href="/feedback" 
+          active={isActive('/feedback')} 
         />
 
         {/* Phần thêm mới 2: Chatbot hỗ trợ */}
         <NavItem 
           icon={<Bot size={20} />} 
           label="Trợ lý ảo (Chatbot)" 
-          href="/dashboard/chatbot" 
-          active={isActive('/dashboard/chatbot')} 
+          href="/chatbot" 
+          active={isActive('/chatbot')} 
         />
 
         <NavItem 
           icon={<Settings size={20} />} 
           label="Cài đặt hệ thống" 
-          href="/dashboard/settings" 
-          active={isActive('/dashboard/settings')} 
+          href="/settings" 
+          active={isActive('/settings')} 
         />
       </nav>
 
