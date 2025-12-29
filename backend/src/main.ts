@@ -37,9 +37,9 @@ async function bootstrap() {
     )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document); // Truy cập tại: http://localhost:3000/api
+  SwaggerModule.setup('api', app, document); // Truy cập tại: http://localhost:6969/api
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT ?? 6969);
   console.log(`Application is running on: ${await app.getUrl()}`);
   console.log(`Swagger Docs available at: ${await app.getUrl()}/api`);
 }
