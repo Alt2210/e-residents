@@ -31,7 +31,7 @@ export default function RegisterPage() {
     return () => clearInterval(timer);
   }, [images.length]);
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
@@ -54,7 +54,7 @@ export default function RegisterPage() {
         setSuccess(true);
         setTimeout(() => router.push('/login'), 2000);
       }
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại!');
     } finally {
       setIsLoading(false);
