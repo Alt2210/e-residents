@@ -3,66 +3,74 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-// Biến instance để tối ưu hóa việc tái sử dụng app trong Serverless
 let cachedApp;
 
 async function bootstrap() {
-  if (!cachedApp) {
-    const app = await NestFactory.create(AppModule);
+  // Nếu đã có cachedApp (trên Vercel), trả về luôn để tiết kiệm tài nguyên
+  if (cachedApp) return cachedApp;
 
-    // 1. Kích hoạt Validation toàn cục
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }));
+  const app = await NestFactory.create(AppModule);
 
-    // 2. Kích hoạt CORS
-    app.enableCors({
-      origin: true, 
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      credentials: true,
-    });
+  // 1. Prefix cho API
+  app.setGlobalPrefix('api');
 
-    // 3. Cấu hình Swagger
-    const config = new DocumentBuilder()
-      .setTitle('E-Residents API')
-      .setDescription('Hệ thống quản lý dân cư, hộ khẩu, tạm trú tạm vắng')
-      .setVersion('1.0')
-      .addBearerAuth(
-        {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          name: 'JWT',
-          description: 'Nhập JWT token',
-          in: 'header',
-        },
-        'JWT-auth',
-      )
-      .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+  // 2. Validation
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
 
-    // QUAN TRỌNG: Phải khởi tạo app trước khi trả về instance cho Vercel
-    await app.init();
-    cachedApp = app.getHttpAdapter().getInstance();
-  }
+  // 3. CORS
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
+  // 4. Swagger - Đặt tại /docs
+  const config = new DocumentBuilder()
+    .setTitle('E-Residents API')
+    .setDescription('Hệ thống quản lý dân cư')
+    .setVersion('1.0')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'JWT-auth',
+    )
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
+  // Khởi tạo app
+  await app.init();
+  
+  // Lưu vào cache
+  cachedApp = app.getHttpAdapter().getInstance();
   return cachedApp;
 }
 
-// Chạy ở Local (Nếu không phải môi trường Vercel)
+// XỬ LÝ CHẠY LOCAL
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3001;
-  NestFactory.create(AppModule).then(app => {
-    app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-      console.log(`Swagger docs: http://localhost:${PORT}/api`);
+  // Gọi chính hàm bootstrap để đảm bảo mọi cấu hình (Swagger, Prefix) được thực hiện
+  NestFactory.create(AppModule).then(async (app) => {
+    app.setGlobalPrefix('api');
+    
+    const config = new DocumentBuilder()
+      .setTitle('E-Residents API')
+      .setVersion('1.0')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document);
+
+    await app.listen(PORT, () => {
+      console.log(`Server: http://localhost:${PORT}/api`);
+      console.log(`Swagger: http://localhost:${PORT}/docs`);
     });
   });
 }
 
-// Export function này để Vercel sử dụng
+// EXPORT CHO VERCEL
 export default async (req: any, res: any) => {
   const server = await bootstrap();
   server(req, res);

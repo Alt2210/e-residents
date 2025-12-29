@@ -2,12 +2,13 @@
  * Script tạo user admin đầu tiên
  * Chạy: node scripts/create-admin.js
  */
+require('dotenv').config();
 
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 // Cấu hình MongoDB - Thay đổi nếu cần
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/quan_ly_dan_cu';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 // Thông tin admin mặc định
 const adminData = {
