@@ -22,7 +22,9 @@ const SettingsPage = () => {
         {sections.map((s, i) => (
           <div key={i} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-6 hover:border-blue-200 cursor-pointer transition-all group">
             <div className="w-14 h-14 bg-gray-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600 rounded-2xl flex items-center justify-center transition-colors">
-              {React.cloneElement(s.icon as React.ReactElement, { size: 24 })}
+              {React.cloneElement(s.icon as React.ReactElement<any>, {
+                size: 24
+              })}
             </div>
             <div className="flex-1">
               <h4 className="text-lg font-bold text-gray-900">{s.title}</h4>
