@@ -50,7 +50,7 @@ export default function LoginPage() {
         // Sau khi kiểm tra tài khoản thành công, điều hướng vào Dashboard
         router.push('/dashboard');
       }
-    } catch (err) {
+    } catch (err: any) {
       // Hiển thị lỗi từ server hoặc lỗi kết nối
       const message = err.response?.data?.message || 'Tên đăng nhập hoặc mật khẩu không đúng!';
       setError(message);
