@@ -33,14 +33,14 @@ export class PersonsController {
 
   // Tra cứu/tìm kiếm nhân khẩu
   @Get('search')
-  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
   async search(@Query() searchDto: PersonSearchDto) {
     return this.personsService.search(searchDto);
   }
 
   // Xem chi tiết nhân khẩu
   @Get(':id')
-  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
   async getDetail(@Param('id') id: string) {
     return this.personsService.getDetail(id);
   }

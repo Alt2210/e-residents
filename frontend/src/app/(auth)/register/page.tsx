@@ -62,7 +62,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white font-sans">
+    <div className="flex min-h-screen bg-white">
       {/* PHẦN BÊN TRÁI: SLIDESHOW */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
         {images.map((img, index) => (

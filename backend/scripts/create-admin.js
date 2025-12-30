@@ -12,10 +12,10 @@ const MONGODB_URI = process.env.MONGODB_URI;
 
 // Thông tin admin mặc định
 const adminData = {
-  username: 'admin',
-  password: 'admin123', // Mật khẩu mặc định - nên đổi sau khi đăng nhập
+  username: 'congdan',
+  password: 'congdan123', // Mật khẩu mặc định - nên đổi sau khi đăng nhập
   fullName: 'Administrator',
-  role: 'TO_TRUONG',
+  role: 'CONG_DAN',
   assignedModules: ['HK', 'NK', 'TAM_TRU_TAM_VANG', 'PHAN_ANH', 'THONG_KE'],
   isActive: true,
 };

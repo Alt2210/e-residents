@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
+    <div className="min-h-screen bg-gray-50 text-gray-900 ">
       {/* 1. Header / Navigation */}
       <nav className="flex items-center justify-between px-8 py-6 bg-white shadow-sm sticky top-0 z-50">
         <div className="text-2xl font-bold text-blue-600">

@@ -229,4 +229,16 @@ export class PersonsService {
     if (query.hoTen) filter.hoTen = { $regex: query.hoTen, $options: 'i' };
     return this.personModel.find(filter).exec();
   }
+
+  async getDetailByCCCD(soCCCD: string): Promise<PersonDocument> {
+    const person = await this.personModel
+      .findOne({ soCCCD }) // Tìm trực tiếp bằng số CCCD
+      .populate('householdId') // Lấy thông tin hộ khẩu liên quan
+      .exec();
+
+    if (!person) {
+      throw new NotFoundException('Không tìm thấy thông tin nhân khẩu khớp với CCCD của tài khoản này');
+    }
+    return person;
+  }
 }

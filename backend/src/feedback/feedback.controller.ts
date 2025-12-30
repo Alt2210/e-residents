@@ -38,7 +38,7 @@ export class FeedbackController {
 
   // 2. CÁC ENDPOINT KHÁC (POST, PATCH...)
   @Post()
-  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
   async create(@Body() createDto: CreateFeedbackDto) {
     return this.feedbackService.create(createDto);
   }

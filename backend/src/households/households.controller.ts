@@ -75,7 +75,7 @@ export class HouseholdsController {
 
   // Tách hộ
   @Post(':id/split')
-  @Roles('TO_TRUONG', 'TO_PHO')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
   async splitHousehold(
     @Param('id') id: string,
     @Body() splitDto: SplitHouseholdDto,

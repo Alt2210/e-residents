@@ -12,30 +12,25 @@ const ResidencePage = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Endpoint khớp chính xác với Controller: /residence/temporary/search hoặc /residence/absence/search
+      // Endpoint khớp với Controller Backend
       const endpoint = tab === 'tam-tru' 
         ? "/residence/temporary/search" 
         : "/residence/absence/search";
       
       const response = await api.get(endpoint);
 
-      // SỬA LỖI .map: Kiểm tra kỹ cấu trúc response
-      // 1. Nếu response.data là mảng trực tiếp
-      // 2. Nếu response.data là object có chứa mảng (ví dụ: { data: [...], total: 10 })
+      // Xử lý bóc tách dữ liệu từ API (hỗ trợ cả mảng trực tiếp hoặc object {data: []})
       let finalData = [];
       if (Array.isArray(response.data)) {
         finalData = response.data;
       } else if (response.data && Array.isArray(response.data.data)) {
         finalData = response.data.data;
-      } else if (response.data && typeof response.data === 'object') {
-        // Trường hợp API trả về object mà dữ liệu nằm trong 1 field khác
-        finalData = Object.values(response.data).find(val => Array.isArray(val)) || [];
       }
 
       setResidenceList(finalData);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu cư trú:", error);
-      setResidenceList([]); // Trả về mảng rỗng để không bị lỗi .map
+      setResidenceList([]);
     } finally {
       setLoading(false);
     }
@@ -52,17 +47,16 @@ const ResidencePage = () => {
         ? `/residence/temporary/${id}/close`
         : `/residence/absence/${id}/close`;
       
-      // Theo controller, Patch close có nhận Body (CloseResidenceDto), truyền {} nếu không có dữ liệu
       await api.patch(endpoint, {}); 
       alert("Thao tác thành công");
       fetchData();
     } catch (error) {
-      alert("Không thể thực hiện thao tác này. Vui lòng kiểm tra quyền hạn.");
+      alert("Không thể thực hiện thao tác này.");
     }
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-8 max-w-7xl mx-auto space-y-6 font-google-sans">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Biến động cư trú</h2>
         <div className="bg-white p-1.5 rounded-2xl border border-gray-100 flex gap-1 shadow-sm">
@@ -87,9 +81,10 @@ const ResidencePage = () => {
             <Loader2 className="animate-spin mb-2" size={32} />
             <p>Đang tải dữ liệu...</p>
           </div>
-        ) : (Array.isArray(residenceList) && residenceList.length > 0) ? (
+        ) : residenceList.length > 0 ? (
           residenceList.map((item: any) => (
             <div key={item._id} className="bg-white p-6 rounded-[2rem] border border-gray-100 flex flex-wrap md:flex-nowrap items-center gap-6 shadow-sm group hover:shadow-md transition-all">
+              {/* Icon hiển thị theo loại hình */}
               <div className={`w-16 h-16 rounded-3xl flex items-center justify-center shrink-0 ${tab === 'tam-tru' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
                 <FileText size={32} />
               </div>
@@ -97,19 +92,25 @@ const ResidencePage = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-1">
                   <h4 className="text-lg font-bold text-gray-900 truncate">
-                    {item.personId?.fullName || "N/A"}
+                    {/* SỬA LỖI: Dùng hoTen thay vì fullName */}
+                    {item.personId?.hoTen || "N/A"}
                   </h4>
                   <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-black rounded-lg uppercase tracking-tighter">
-                    {item.personId?.idCard || "Chưa có CCCD"}
+                    {/* SỬA LỖI: Dùng soCCCD thay vì idCard */}
+                    {item.personId?.soCCCD || "CHƯA CÓ CCCD"}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 mb-2 italic">Lý do: {item.reason || "N/A"}</p>
+                {/* SỬA LỖI: Thêm fallback lyDo nếu reason không có */}
+                <p className="text-sm text-gray-500 mb-2 italic">Lý do: {item.lyDo || item.reason || "N/A"}</p>
+                
                 <div className="flex flex-wrap gap-4 text-xs text-gray-400 font-medium">
                   <span className="flex items-center gap-1">
-                    <Calendar size={14}/> Từ: {item.startDate ? new Date(item.startDate).toLocaleDateString('vi-VN') : '...'}
+                    <Calendar size={14}/> 
+                    Từ: {item.tuNgay || item.startDate ? new Date(item.tuNgay || item.startDate).toLocaleDateString('vi-VN') : '...'}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock size={14}/> Đến: {item.endDate ? new Date(item.endDate).toLocaleDateString('vi-VN') : '...'}
+                    <Clock size={14}/> 
+                    Đến: {item.denNgay || item.endDate ? new Date(item.denNgay || item.endDate).toLocaleDateString('vi-VN') : '...'}
                   </span>
                 </div>
               </div>
@@ -132,7 +133,7 @@ const ResidencePage = () => {
             </div>
           ))
         ) : (
-          <div className="bg-white p-12 rounded-[2rem] border border-dashed border-gray-200 text-center text-gray-400">
+          <div className="bg-white p-12 rounded-[2rem] border border-dashed border-gray-200 text-center text-gray-400 font-medium">
             Hiện không có bản ghi nào.
           </div>
         )}

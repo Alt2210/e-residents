@@ -2,223 +2,306 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Search, 
-  UserPlus, 
-  Edit2, 
-  Trash2, 
-  UserMinus, 
+import {
+  Search,
+  UserPlus,
+  Edit2,
+  Trash2,
+  UserMinus,
   Ghost,
-  Filter,
   CreditCard,
   MapPin,
   Calendar,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import api from "@/src/lib/api";
 
 const CitizensPage = () => {
   const router = useRouter();
-  const [citizens, setCitizens] = useState([]);
+  const [citizens, setCitizens] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // 1. Hàm gọi API lấy danh sách nhân khẩu
-  // Sử dụng endpoint /persons/search nếu có từ khóa, ngược lại dùng /persons
-  const fetchCitizens = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      const endpoint = searchTerm.trim() ? "/persons/search" : "/persons";
-      const config = searchTerm.trim() ? { params: { keyword: searchTerm } } : {};
-      
-      const response = await api.get(endpoint, config);
-      
-      // Cấu trúc trả về của search là { data, total... }, của findAll là mảng
-      const data = response.data.data || response.data;
-      setCitizens(Array.isArray(data) ? data : []);
-    } catch (error: any) {
-      console.error("Lỗi khi tải danh sách nhân khẩu:", error.response?.data || error.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchTerm]);
+  // State quản lý phân trang theo yêu cầu (50 người/trang)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 50;
+  // Chuyển hướng sang trang chỉnh sửa
+  const handleEdit = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    router.push(`/citizens/${id}/edit`);
+  };
 
-  // 2. Tự động tải lại khi searchTerm thay đổi (có thể thêm debounce nếu cần)
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchCitizens();
-    }, 500);
+  // Ghi nhận chuyển đi
+  const handleMarkMoved = async (e: React.MouseEvent, id: string, name: string) => {
+    e.stopPropagation();
+    const moveDate = prompt(`Nhập ngày chuyển đi cho ông/bà ${name} (YYYY-MM-DD):`, new Date().toISOString().split('T')[0]);
+    const moveTo = prompt("Nhập nơi chuyển đến:");
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [fetchCitizens]);
-
-  // 3. Xử lý xóa nhân khẩu (Soft delete theo logic backend)
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa hồ sơ của ông/bà ${name}?`)) {
+    if (moveDate && moveTo) {
       try {
-        await api.delete(`/persons/${id}`);
-        alert("Đã xóa hồ sơ thành công");
+        // Gọi API PATCH /persons/:id/mark-moved
+        await api.patch(`/persons/${id}/mark-moved`, { moveDate, moveTo });
+        alert("Đã cập nhật trạng thái chuyển đi thành công");
         fetchCitizens();
       } catch (error: any) {
-        alert("Lỗi khi xóa: " + (error.response?.data?.message || "Không xác định"));
+        alert("Lỗi: " + (error.response?.data?.message || "Không thể cập nhật"));
       }
     }
   };
 
+  // Ghi nhận khai tử
+  const handleMarkDeceased = async (e: React.MouseEvent, id: string, name: string) => {
+    e.stopPropagation();
+    const date = prompt(`Nhập ngày qua đời của ông/bà ${name} (YYYY-MM-DD):`, new Date().toISOString().split('T')[0]);
+
+    if (date) {
+      try {
+        // Gọi API PATCH /persons/:id/mark-deceased
+        await api.patch(`/persons/${id}/mark-deceased`, { date });
+        alert("Đã cập nhật trạng thái khai tử thành công");
+        fetchCitizens();
+      } catch (error: any) {
+        alert("Lỗi: " + (error.response?.data?.message || "Không thể cập nhật"));
+      }
+    }
+  };
+
+  // Hàm ánh xạ trạng thái sang giao diện màu sắc
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'THUONG_TRU':
+        return <span className="text-[10px] font-bold px-2 py-1 bg-green-100 text-green-700 rounded-lg">Thường trú</span>;
+      case 'TAM_VANG':
+        return <span className="text-[10px] font-bold px-2 py-1 bg-yellow-100 text-yellow-700 rounded-lg">Tạm Vắng</span>;
+      case 'TAM_TRU':
+        return <span className="text-[10px] font-bold px-2 py-1 bg-blue-100 text-blue-700 rounded-lg">Tạm trú</span>;
+      case 'DA_QUA_DOI':
+        return <span className="text-[10px] font-bold px-2 py-1 bg-gray-100 text-gray-700 rounded-lg">Đã qua đời</span>;
+      case 'DA_CHUYEN_DI':
+        return <span className="text-[10px] font-bold px-2 py-1 bg-red-100 text-red-700 rounded-lg">Đã chuyển đi</span>;
+      default:
+        return <span className="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-700 rounded-lg">{status}</span>;
+    }
+  };
+
+  const fetchCitizens = useCallback(async () => {
+    try {
+      setLoading(true);
+      // Gọi API search để lấy dữ liệu phân trang
+      const response = await api.get("/persons/search", {
+        params: {
+          keyword: searchTerm.trim(),
+          page: currentPage,
+          limit: limit
+        }
+      });
+
+      const { data, total, totalPages: totalP } = response.data;
+      setCitizens(data || []);
+      setTotalItems(total || 0);
+      setTotalPages(totalP || 1);
+    } catch (error: any) {
+      console.error("Lỗi khi tải danh sách:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, currentPage, limit]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchCitizens();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [fetchCitizens]);
+
+  // Quay lại trang 1 khi thực hiện tìm kiếm mới
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const handleDelete = (e: React.MouseEvent, id: string, name: string) => {
+    e.stopPropagation();
+    if (confirm(`Bạn có chắc chắn muốn xóa hồ sơ của ông/bà ${name}?`)) {
+      api.delete(`/persons/${id}`)
+        .then(() => {
+          alert("Đã xóa hồ sơ thành công");
+          fetchCitizens();
+        })
+        .catch((error: any) => {
+          alert("Lỗi khi xóa: " + (error.response?.data?.message || "Không xác định"));
+        });
+    }
+  };
+
+  const renderPageNumbers = () => {
+    const pages = [];
+    const range = 2;
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - range && i <= currentPage + range)) {
+        pages.push(
+          <button
+            key={i}
+            onClick={(e) => { e.stopPropagation(); setCurrentPage(i); }}
+            className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${currentPage === i
+              ? "bg-blue-600 text-white shadow-md shadow-blue-100"
+              : "hover:bg-gray-100 text-gray-500"
+              }`}
+          >
+            {i}
+          </button>
+        );
+      } else if (i === currentPage - range - 1 || i === currentPage + range + 1) {
+        pages.push(<span key={i} className="px-1 text-gray-400">...</span>);
+      }
+    }
+    return pages;
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6 font-google-sans">
-      {/* Header & Nút Thêm mới */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Cơ sở dữ liệu nhân khẩu</h2>
-          <p className="text-gray-500 mt-1">Quản lý thông tin cư trú và biến động dân cư trong khu vực</p>
+          <p className="text-gray-500 mt-1 italic">Hiển thị {citizens.length}/{totalItems} nhân khẩu (Tối đa {limit} người/trang)</p>
         </div>
-        <button 
+        <button
           onClick={() => router.push("/citizens/regist-new-citizen")}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-200 transition-all font-semibold active:scale-95"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-200 transition-all font-semibold"
         >
-          <UserPlus size={20} />
-          Đăng ký nhân khẩu mới
+          <UserPlus size={20} /> Đăng ký mới
         </button>
       </div>
 
-      {/* Thanh tìm kiếm & Bộ lọc */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center">
-        <div className="relative flex-1 min-w-[300px]">
+      <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
+        <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm kiếm theo họ tên, số CCCD..." 
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all text-gray-700 shadow-inner"
+            placeholder="Tìm theo tên, số CCCD..."
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500"
           />
         </div>
-        <button className="px-5 py-3 border border-gray-200 rounded-2xl hover:bg-gray-50 flex items-center gap-2 text-gray-600 font-medium transition-colors">
-          <Filter size={20} />
-          Bộ lọc nâng cao
-        </button>
       </div>
 
-      {/* Bảng dữ liệu */}
       <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100">
-                <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-widest">Thông tin cá nhân</th>
-                <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-widest text-center">Giới tính / Dân tộc</th>
-                <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-widest">Nghề nghiệp</th>
-                <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-widest">Trạng thái cư trú</th>
+                <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-widest">Nhân khẩu</th>
+                <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-widest">Thông tin</th>
+                <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-widest">Trạng thái</th>
                 <th className="p-5 font-bold text-gray-500 text-xs uppercase tracking-widest text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="p-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="animate-spin text-blue-600" size={40} />
-                      <p className="text-gray-500 font-medium">Đang truy xuất dữ liệu...</p>
-                    </div>
-                  </td>
-                </tr>
+                <tr><td colSpan={4} className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-600" size={40} /></td></tr>
               ) : citizens.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-20 text-center text-gray-400">
-                    <div className="flex flex-col items-center gap-2">
-                      <Search size={48} className="opacity-20" />
-                      <p>Không tìm thấy nhân khẩu nào khớp với yêu cầu.</p>
-                    </div>
-                  </td>
-                </tr>
+                <tr><td colSpan={4} className="p-20 text-center text-gray-400 font-medium">Không có dữ liệu nhân khẩu</td></tr>
               ) : (
                 citizens.map((person: any) => (
-                  <tr key={person._id} className="hover:bg-blue-50/30 transition-all group">
+                  <tr
+                    key={person._id}
+                    onClick={() => router.push(`/citizens/${person._id}`)}
+                    className="hover:bg-blue-50/30 transition-all group cursor-pointer"
+                  >
                     <td className="p-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
-                          {person.hoTen.charAt(0)}
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                          {person.hoTen?.charAt(0) || "?"}
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900 text-base">{person.hoTen}</p>
-                          <div className="flex items-center gap-1.5 text-blue-600 font-mono text-sm font-medium mt-0.5">
-                            <CreditCard size={14} />
-                            {person.soCCCD || "Chưa cấp CCCD"}
-                          </div>
+                          <p className="font-bold text-gray-900 leading-none">{person.hoTen || "N/A"}</p>
+                          <p className="text-[11px] text-blue-600 mt-1">{person.soCCCD || "Chưa cấp CCCD"}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-5 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-tighter ${
-                          person.gioiTinh === 'Nam' ? 'bg-blue-100 text-blue-700' : 
-                          person.gioiTinh === 'Nữ' ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-700'
-                        }`}>
-                          {person.gioiTinh}
-                        </span>
-                        <span className="text-xs text-gray-400 font-medium">{person.danToc || "Kinh"}</span>
+                    <td className="p-5 text-sm text-gray-600">
+                      <p className="font-medium text-gray-800">{person.gioiTinh} - {person.danToc || "Kinh"}</p>
+                      <p className="text-gray-400 text-xs italic mt-0.5">{person.ngheNghiep || "Không có"}</p>
+                      <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-1">
+                        <Calendar size={10} />
+                        Sinh: {person.ngaySinh ? new Date(person.ngaySinh).toLocaleDateString('vi-VN') : "N/A"}
                       </div>
                     </td>
                     <td className="p-5">
-                      <p className="text-sm font-semibold text-gray-700">{person.ngheNghiep || "Không có"}</p>
-                      <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                        <Calendar size={12} />
-                        Sinh: {new Date(person.ngaySinh).toLocaleDateString('vi-VN')}
-                      </div>
-                    </td>
-                    <td className="p-5">
-                      <div className="flex flex-col gap-1">
-                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md w-fit ${
-                            person.trangThai === 'THUONG_TRU' ? 'bg-green-100 text-green-700' :
-                            person.trangThai === 'TAM_VANG' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
-                         }`}>
-                           {person.trangThai}
-                         </span>
-                         <div className="flex items-start gap-1.5 max-w-[200px]">
-                          <MapPin size={14} className="text-gray-300 mt-0.5 flex-shrink-0" />
-                          <p className="text-xs text-gray-500 truncate italic">
-                            {person.householdId ? `Hộ: ${person.householdId.soHoKhau || "Đang tải"}` : "Chưa nhập hộ"}
-                          </p>
+                      <div className="flex flex-col gap-1.5">
+                        {getStatusBadge(person.trangThai)}
+                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                          <MapPin size={10} />
+                          {person.householdId?.soHoKhau ? `Sổ: ${person.householdId.soHoKhau}` : "Chưa nhập hộ"}
                         </div>
                       </div>
                     </td>
-                    <td className="p-5 text-right">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          title="Chỉnh sửa" 
-                          className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button 
-                          title="Khai báo vắng mặt" 
-                          className="p-2.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all"
-                        >
-                          <UserMinus size={18} />
-                        </button>
-                        <button 
-                          title="Khai tử" 
-                          className="p-2.5 text-gray-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
-                        >
-                          <Ghost size={18} />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(person._id, person.hoTen)}
-                          title="Xóa hồ sơ" 
-                          className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                    <td className="p-5 text-right flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* Nút Chỉnh sửa */}
+                      <button
+                        className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
+                        title="Chỉnh sửa"
+                        onClick={(e) => handleEdit(e, person._id)}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+
+                      {/* Nút Chuyển đi */}
+                      <button
+                        className="p-2 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors"
+                        title="Chuyển đi"
+                        onClick={(e) => handleMarkMoved(e, person._id, person.hoTen)}
+                      >
+                        <UserMinus size={16} />
+                      </button>
+
+                      {/* Nút Khai tử */}
+                      <button
+                        className="p-2 hover:bg-slate-100 hover:text-slate-900 rounded-lg transition-colors"
+                        title="Khai tử"
+                        onClick={(e) => handleMarkDeceased(e, person._id, person.hoTen)}
+                      >
+                        <Ghost size={16} />
+                      </button>
+
+                      {/* Nút Xóa hồ sơ (Sử dụng hàm xóa mềm trong Backend) */}
+                      <button
+                        onClick={(e) => handleDelete(e, person._id, person.hoTen)}
+                        className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                        title="Xóa hồ sơ"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="p-6 border-t border-gray-100 flex justify-center bg-gray-50/30">
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage === 1 || loading}
+              onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(prev - 1, 1)); }}
+              className="p-2.5 rounded-xl hover:bg-white border border-transparent hover:border-gray-200 disabled:opacity-20 transition-all text-gray-600 shadow-sm"
+            >
+              <ChevronLeft size={22} />
+            </button>
+            <div className="flex items-center gap-1.5">{renderPageNumbers()}</div>
+            <button
+              disabled={currentPage === totalPages || loading}
+              onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(prev + 1, totalPages)); }}
+              className="p-2.5 rounded-xl hover:bg-white border border-transparent hover:border-gray-200 disabled:opacity-20 transition-all text-gray-600 shadow-sm"
+            >
+              <ChevronRight size={22} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

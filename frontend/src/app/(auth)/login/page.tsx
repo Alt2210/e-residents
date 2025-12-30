@@ -34,21 +34,20 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Gọi API đăng nhập thông qua Axios instance đã cấu hình
-      const response = await api.post('/auth/login', {
-        username,
-        password
-      });
-
-      // Lấy Token và thông tin từ Backend trả về
-      const { access_token } = response.data;
+      const response = await api.post('/auth/login', { username, password });
+      const { access_token, user } = response.data; // Backend của bạn trả về { access_token, user }
 
       if (access_token) {
-        // Lưu token vào localStorage để các request sau tự động sử dụng
         localStorage.setItem('access_token', access_token);
-        
-        // Sau khi kiểm tra tài khoản thành công, điều hướng vào Dashboard
-        router.push('/dashboard');
+
+        // LƯU THÊM DÒNG NÀY ĐỂ HEADER VÀ CÁC PAGE CÓ DỮ LIỆU
+        localStorage.setItem('user', JSON.stringify(user));
+
+        if (user.role === 'CONG_DAN') {
+          router.push('/service');
+        } else {
+          router.push('/dashboard');
+        }
       }
     } catch (err: any) {
       // Hiển thị lỗi từ server hoặc lỗi kết nối
@@ -60,15 +59,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white font-sans">
+    <div className="flex min-h-screen bg-white font-google-sans">
       {/* PHẦN BÊN TRÁI: SLIDESHOW */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
         {images.map((img, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === currentImage ? "opacity-100" : "opacity-0"
-            }`}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentImage ? "opacity-100" : "opacity-0"
+              }`}
             style={{
               backgroundImage: `url('${img}')`,
               backgroundSize: 'cover',
@@ -101,21 +99,21 @@ export default function LoginPage() {
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label className="block text-sm font-medium text-gray-700">Tên đăng nhập</label>
-              <input 
-                type="text" 
-                required 
+              <input
+                type="text"
+                required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 placeholder="Tên của bạn"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
-              <input 
-                type="password" 
-                required 
+              <input
+                type="password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -131,7 +129,7 @@ export default function LoginPage() {
               <Link href="#" className="text-sm text-blue-600 hover:underline">Quên mật khẩu?</Link>
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={isLoading}
               className={`w-full py-3 px-4 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg font-semibold shadow-md transition duration-200`}

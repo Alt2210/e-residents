@@ -14,7 +14,10 @@ export class User {
   @Prop({ required: true })
   fullName: string;
 
-  @Prop({ required: true, enum: ['TO_TRUONG', 'TO_PHO', 'CAN_BO'] })
+  @Prop({ unique: true, sparse: true })
+  soCCCD: string;
+
+  @Prop({ required: true, enum: ['TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN'] })
   role: string;
 
   @Prop([String])
