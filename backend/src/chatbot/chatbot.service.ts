@@ -15,21 +15,29 @@ export class ChatbotService {
   async chat(message: string, sessionId: string): Promise<any> {
     const apiUrl = this.configService.getOrThrow<string>('CHATBOT_API_URL');
     
+    // Đổi key gửi đi thành 'query' theo yêu cầu của Server AI
+    const payload = {
+      query: message, 
+      session_id: sessionId 
+    };
+
     try {
       const response = await firstValueFrom(
-        this.httpService.post(apiUrl, 
-          { message, session_id: sessionId }, // Đảm bảo key khớp với AI Server
-          { 
-            headers: { 
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': 'true' // QUAN TRỌNG: Bỏ qua trang cảnh báo của ngrok
-            } 
-          }
-        ),
+        this.httpService.post(apiUrl, payload, {
+          headers: { 
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true' // Vượt qua trang chặn của ngrok
+          },
+          timeout: 60000 // Tăng thời gian chờ cho AI xử lý
+        }),
       );
-      return { reply: response.data };
+
+      return {
+        reply: response.data.response || response.data.reply || response.data
+      };
     } catch (error) {
-      throw new HttpException('AI Server không phản hồi (502)', HttpStatus.BAD_GATEWAY);
+      console.error('Lỗi kết nối AI:', error.message);
+      throw new HttpException('AI Server không phản hồi', HttpStatus.BAD_GATEWAY);
     }
   }
 }

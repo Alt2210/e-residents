@@ -71,7 +71,7 @@ const EditCitizenPage = () => {
     e.preventDefault();
     setSubmitting(true);
 
-    const submitData = { ...formData };
+    const submitData: any = { ...formData };
     
     // Xử lý các trường ngày tháng để tránh lỗi ISO 8601 nếu để trống
     if (!submitData.ngayCapCCCD) delete submitData.ngayCapCCCD;
