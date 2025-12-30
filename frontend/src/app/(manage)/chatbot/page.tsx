@@ -28,70 +28,65 @@ const ChatbotPage = () => {
   }, [messages, loading]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || loading) return;
+  if (!inputValue.trim() || loading) return;
 
-    const userMessage = inputValue.trim();
-    setInputValue("");
-    setMessages((prev: Message[]) => [...prev, { role: 'user', content: userMessage }]);
-    setLoading(true);
+  const userMessage = inputValue.trim();
+  setInputValue("");
+  // 1. Sửa lỗi TS ở đây
+  setMessages((prev: Message[]) => [...prev, { role: 'user', content: userMessage }]);
+  setLoading(true);
 
-    // URL ngrok bạn đã cung cấp
+  try {
+    // 2. Dùng địa chỉ Ngrok trực tiếp và đúng endpoint /chat_stream
     const API_URL = "https://raspiest-larue-melanistic.ngrok-free.dev/chat_stream";
 
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Header quan trọng để chạy qua ngrok
-          'ngrok-skip-browser-warning': 'true', 
-        },
-        body: JSON.stringify({
-          query: userMessage,
-          session_id: sessionId
-        }),
-      });
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // BẮT BUỘC có header này để vượt qua trang cảnh báo của Ngrok
+        'ngrok-skip-browser-warning': '69420', 
+      },
+      body: JSON.stringify({
+        query: userMessage,     // Khớp với ChatRequest.query trong Python
+        session_id: sessionId 
+      }),
+    });
 
-      if (!response.ok) {
-        throw new Error("Không thể kết nối với máy chủ AI (ngrok).");
-      }
-
-      // Tạo một bubble trống cho bot trước khi stream đổ về
-      setMessages((prev: Message[]) => [...prev, { role: 'bot', content: "" }]);
-
-      if (!response.body) return;
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunkValue = decoder.decode(value, { stream: true });
-
-        if (chunkValue) {
-          setMessages((prev: Message[]) => {
-            const lastMsg = prev[prev.length - 1];
-            if (lastMsg && lastMsg.role === 'bot') {
-              const updatedMessages = [...prev];
-              updatedMessages[updatedMessages.length - 1] = {
-                ...lastMsg,
-                content: lastMsg.content + chunkValue
-              };
-              return updatedMessages;
-            }
-            return prev;
-          });
-        }
-      }
-    } catch (error: any) {
-      console.error("Chat Error:", error);
-      setMessages((prev: Message[]) => [...prev, { role: 'bot', content: "Lỗi: " + (error.message || "Mất kết nối server.") }]);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+       const errorText = await response.text();
+       throw new Error(`Server báo lỗi: ${response.status} - ${errorText}`);
     }
-  };
+
+    // 3. Sửa lỗi TS khi tạo bubble trống
+    setMessages((prev: Message[]) => [...prev, { role: 'bot', content: "" }]);
+
+    const reader = response.body?.getReader();
+    if (!reader) return;
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+
+      // 4. Sửa lỗi TS khi cập nhật stream
+      setMessages((prev: Message[]) => {
+        const newMsgs = [...prev];
+        const last = newMsgs[newMsgs.length - 1];
+        if (last && last.role === 'bot') {
+          last.content += chunk;
+        }
+        return newMsgs;
+      });
+    }
+  } catch (error: any) {
+    console.error("Lỗi kết nối:", error);
+    setMessages((prev: Message[]) => [...prev, { role: 'bot', content: "Lỗi kết nối server AI. Hãy kiểm tra console F12." }]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleSendMessage();
