@@ -2,16 +2,59 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Home, Search, Plus, Users, MapPin, ArrowRightLeft, Split, UserCheck } from 'lucide-react';
-import api from '@/src/lib/api'; // Giả định bạn dùng axios instance đã cấu hình
+import { Home, Search, Plus, Users, MapPin, ArrowRightLeft, Split, UserCheck, Loader2 } from 'lucide-react';
+import api from '@/src/lib/api';
+
+// 1. Định nghĩa cấu trúc dữ liệu cho Hộ khẩu
+interface Household {
+  _id: string;
+  soHoKhau: string;
+  chuHoId?: {
+    _id: string;
+    hoTen: string;
+  };
+  soNha: string;
+  duongPho: string;
+  phuong: string;
+  quan: string;
+  isDeleted?: boolean;
+}
 
 const HouseholdsPage = () => {
   const router = useRouter();
-  const [households, setHouseholds] = useState([]);
+  // 2. Gán kiểu cho State là một mảng Household
+  const [households, setHouseholds] = useState<Household[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // 1. Hàm Đổi chủ hộ (Sử dụng API POST /households/:id/change-head)
+  // Hàm gọi API lấy danh sách hộ khẩu
+  const fetchHouseholds = async (keyword = "") => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/households/search`, {
+        params: {
+          keyword,
+          limit: 20
+        }
+      });
+      // Giả định Backend trả về: { data: [...] }
+      setHouseholds(response.data.data || []);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách hộ khẩu:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchHouseholds(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  // 1. Hàm Đổi chủ hộ
   const handleChangeHead = async (e: React.MouseEvent, householdId: string) => {
     e.stopPropagation();
     const newHeadId = prompt("Nhập ID (chuỗi 24 ký tự) của nhân khẩu sẽ làm chủ hộ mới:");
@@ -23,16 +66,16 @@ const HouseholdsPage = () => {
         changeDate: new Date().toISOString()
       });
       alert("Đã thay đổi chủ hộ thành công!");
-      fetchHouseholds(searchTerm); // Tải lại danh sách
+      fetchHouseholds(searchTerm);
     } catch (error: any) {
       alert("Lỗi: " + (error.response?.data?.message || "Không thể đổi chủ hộ"));
     }
   };
 
-  // 2. Hàm Chuyển hộ / Đóng sổ (Sử dụng API DELETE /households/:id)
+  // 2. Hàm Chuyển hộ / Đóng sổ
   const handleDeleteHousehold = async (e: React.MouseEvent, id: string, soHoKhau: string) => {
     e.stopPropagation();
-    if (confirm(`Bạn có chắc chắn muốn đóng sổ hộ khẩu số ${soHoKhau}? Hành động này sẽ chuyển trạng thái hộ sang không hoạt động.`)) {
+    if (confirm(`Bạn có chắc chắn muốn đóng sổ hộ khẩu số ${soHoKhau}?`)) {
       try {
         await api.delete(`/households/${id}`);
         alert("Đã đóng sổ hộ khẩu thành công");
@@ -43,43 +86,15 @@ const HouseholdsPage = () => {
     }
   };
 
-  // 3. Hàm Tách hộ (Chuyển hướng sang trang tách hộ riêng biệt)
+  // 3. Hàm Tách hộ
   const handleSplitRequest = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     router.push(`/households/${id}/split`);
   };
 
-  // Hàm gọi API lấy danh sách hộ khẩu
-  const fetchHouseholds = async (keyword = "") => {
-    try {
-      setLoading(true);
-      // Gọi API search của HouseholdsController
-      const response = await api.get(`/households/search`, {
-        params: {
-          keyword,
-          limit: 20 // Tăng giới hạn hiển thị
-        }
-      });
-      setHouseholds(response.data.data); // Backend trả về { data, total, page... }
-    } catch (error) {
-      console.error("Lỗi khi tải danh sách hộ khẩu:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Gọi API lần đầu và khi searchTerm thay đổi (có thể thêm debounce nếu cần)
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchHouseholds(searchTerm);
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
-
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6 font-google-sans">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Sổ quản lý hộ khẩu</h2>
           <p className="text-gray-500 mt-1">Quản lý danh sách hộ gia đình và hồ sơ cư trú địa phương</p>
@@ -106,17 +121,22 @@ const HouseholdsPage = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-20 text-gray-500">Đang tải dữ liệu hộ khẩu...</div>
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4">
+          <Loader2 className="animate-spin text-blue-600" size={40} />
+          <p>Đang tải dữ liệu hộ khẩu...</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {households.map((h) => (
-            <div key={h._id} className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+            <div 
+              key={h._id} 
+              className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group relative"
+            >
               <div className="flex justify-between items-start mb-4">
                 <div className="p-3 bg-blue-50 rounded-2xl text-blue-600">
                   <Home size={24} />
                 </div>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {/* Nút Đổi chủ hộ */}
+                <div className="flex gap-2 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => handleChangeHead(e, h._id)}
                     title="Đổi chủ hộ"
@@ -124,8 +144,6 @@ const HouseholdsPage = () => {
                   >
                     <UserCheck size={18} />
                   </button>
-
-                  {/* Nút Tách hộ */}
                   <button
                     onClick={(e) => handleSplitRequest(e, h._id)}
                     title="Tách hộ"
@@ -133,8 +151,6 @@ const HouseholdsPage = () => {
                   >
                     <Split size={18} />
                   </button>
-
-                  {/* Nút Chuyển hộ (Đóng sổ) */}
                   <button
                     onClick={(e) => handleDeleteHousehold(e, h._id, h.soHoKhau)}
                     title="Chuyển hộ / Đóng sổ"
@@ -144,37 +160,38 @@ const HouseholdsPage = () => {
                   </button>
                 </div>
               </div>
+
               <div>
-                {/* h.chuHoId.hoTen được populate từ bảng Person */}
                 <h3 className="text-xl font-bold text-gray-900">
                   {h.chuHoId?.hoTen || "Chưa xác định chủ hộ"}
                 </h3>
-                {/* Backend sử dụng trường soHoKhau */}
-                <p className="text-sm font-google-sans text-blue-600 font-semibold mb-3">Số hộ khẩu: {h.soHoKhau}</p>
+                <p className="text-sm text-blue-600 font-semibold mb-3">Số hộ khẩu: {h.soHoKhau}</p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <MapPin size={14} />
-                    {/* Kết hợp các trường địa chỉ từ Schema */}
-                    {`${h.soNha}, ${h.duongPho}, ${h.phuong}, ${h.quan}`}
+                    <span className="line-clamp-1">
+                      {`${h.soNha}, ${h.duongPho}, ${h.phuong}, ${h.quan}`}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Users size={14} />
-                    {/* Trường này bạn có thể bổ sung API count nhân khẩu hoặc hiển thị tạm */}
                     Hộ khẩu đang hoạt động
                   </div>
                 </div>
               </div>
+
               <button
-                onClick={() => window.location.href = `/households/${h._id}`}
+                onClick={() => router.push(`/households/${h._id}`)}
                 className="mt-6 w-full py-3 bg-gray-50 hover:bg-blue-600 hover:text-white text-gray-600 rounded-2xl font-bold text-sm transition-all"
               >
                 Xem chi tiết hồ sơ hộ
               </button>
             </div>
           ))}
+
           {!loading && households.length === 0 && (
-            <div className="col-span-full text-center py-10 text-gray-400 italic">
-              Không tìm thấy hộ khẩu nào phù hợp.
+            <div className="col-span-full text-center py-20 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
+              <p className="text-gray-400 italic">Không tìm thấy hộ khẩu nào phù hợp.</p>
             </div>
           )}
         </div>
