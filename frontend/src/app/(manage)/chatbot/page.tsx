@@ -17,7 +17,7 @@ const ChatbotPage = () => {
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessionId] = useState(`session-${Date.now()}`); // Tạo ID phiên để Backend AI ghi nhớ ngữ cảnh
-  
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // 2. Tự động cuộn xuống khi có tin nhắn mới
@@ -32,24 +32,31 @@ const ChatbotPage = () => {
     if (!inputValue.trim() || loading) return;
 
     const userMessage = inputValue.trim();
-    setInputValue(""); // Xóa input ngay lập tức để UX mượt hơn
+    setInputValue("");
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setLoading(true);
 
     try {
-      // Gọi tới endpoint Post /chatbot/ask mà bạn đã định nghĩa trong chatbot.controller.ts
       const response = await api.post('/chatbot/ask', {
         message: userMessage,
         sessionId: sessionId
       });
 
-      // Backend trả về { reply: response.data } theo chatbot.service.ts của bạn
-      const botReply = response.data.reply || "Xin lỗi, tôi gặp trục trặc trong việc xử lý câu hỏi này.";
-      
+      // Xử lý linh hoạt các kiểu dữ liệu trả về từ proxy NestJS
+      let botReply = "";
+      if (typeof response.data.reply === 'string') {
+        botReply = response.data.reply;
+      } else if (response.data.reply?.response) {
+        botReply = response.data.reply.response;
+      } else {
+        botReply = JSON.stringify(response.data.reply);
+      }
+
       setMessages(prev => [...prev, { role: 'bot', content: botReply }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chatbot Error:", error);
-      setMessages(prev => [...prev, { role: 'bot', content: "Mất kết nối với máy chủ AI. Vui lòng thử lại sau." }]);
+      const errorMsg = error.response?.data?.message || "Mất kết nối với máy chủ AI (ngrok).";
+      setMessages(prev => [...prev, { role: 'bot', content: errorMsg }]);
     } finally {
       setLoading(false);
     }
@@ -80,7 +87,7 @@ const ChatbotPage = () => {
             </div>
           </div>
         </div>
-        <button 
+        <button
           onClick={handleReset}
           className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-blue-600 transition-colors"
         >
@@ -90,22 +97,20 @@ const ChatbotPage = () => {
 
       {/* Khung Chat */}
       <div className="flex-1 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-        <div 
+        <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar"
         >
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                msg.role === 'bot' ? 'bg-blue-50 text-blue-600' : 'bg-slate-900 text-white'
-              }`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${msg.role === 'bot' ? 'bg-blue-50 text-blue-600' : 'bg-slate-900 text-white'
+                }`}>
                 {msg.role === 'bot' ? <Sparkles size={20} /> : <User size={20} />}
               </div>
-              <div className={`max-w-[75%] p-5 rounded-[2rem] text-sm leading-relaxed ${
-                msg.role === 'bot' 
-                  ? 'bg-gray-50 text-gray-800 rounded-tl-none' 
-                  : 'bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-100'
-              }`}>
+              <div className={`max-w-[75%] p-5 rounded-[2rem] text-sm leading-relaxed ${msg.role === 'bot'
+                ? 'bg-gray-50 text-gray-800 rounded-tl-none'
+                : 'bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-100'
+                }`}>
                 {msg.content}
               </div>
             </div>
@@ -130,15 +135,15 @@ const ChatbotPage = () => {
         <div className="p-6 bg-gray-50/50 border-t border-gray-50">
           <div className="relative flex items-center gap-4">
             <div className="flex-1 relative">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Hỏi tôi về dân số, hộ khẩu hoặc thủ tục..."
                 className="w-full pl-6 pr-12 py-4 bg-white border-none rounded-3xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
               />
-              <button 
+              <button
                 onClick={handleSendMessage}
                 disabled={loading || !inputValue.trim()}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all disabled:bg-gray-300"

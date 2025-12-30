@@ -37,6 +37,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     FeedbackModule,
     StatisticsModule,
     ResidenceModule,
+    ChatbotModule,
   ],
 })
 export class AppModule {}
