@@ -27,36 +27,67 @@ const ChatbotPage = () => {
     }
   }, [messages, loading]);
 
-  // 3. Hàm gửi tin nhắn tới Backend
   const handleSendMessage = async () => {
     if (!inputValue.trim() || loading) return;
 
     const userMessage = inputValue.trim();
     setInputValue("");
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setMessages((prev: Message[]) => [...prev, { role: 'user', content: userMessage }]);
     setLoading(true);
 
+    // URL ngrok bạn đã cung cấp
+    const API_URL = "https://raspiest-larue-melanistic.ngrok-free.dev/chat_stream";
+
     try {
-      const response = await api.post('/chatbot/ask', {
-        message: userMessage,
-        sessionId: sessionId
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Header quan trọng để chạy qua ngrok
+          'ngrok-skip-browser-warning': 'true', 
+        },
+        body: JSON.stringify({
+          query: userMessage,
+          session_id: sessionId
+        }),
       });
 
-      // Xử lý linh hoạt các kiểu dữ liệu trả về từ proxy NestJS
-      let botReply = "";
-      if (typeof response.data.reply === 'string') {
-        botReply = response.data.reply;
-      } else if (response.data.reply?.response) {
-        botReply = response.data.reply.response;
-      } else {
-        botReply = JSON.stringify(response.data.reply);
+      if (!response.ok) {
+        throw new Error("Không thể kết nối với máy chủ AI (ngrok).");
       }
 
-      setMessages(prev => [...prev, { role: 'bot', content: botReply }]);
+      // Tạo một bubble trống cho bot trước khi stream đổ về
+      setMessages((prev: Message[]) => [...prev, { role: 'bot', content: "" }]);
+
+      if (!response.body) return;
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value, { stream: true });
+
+        if (chunkValue) {
+          setMessages((prev: Message[]) => {
+            const lastMsg = prev[prev.length - 1];
+            if (lastMsg && lastMsg.role === 'bot') {
+              const updatedMessages = [...prev];
+              updatedMessages[updatedMessages.length - 1] = {
+                ...lastMsg,
+                content: lastMsg.content + chunkValue
+              };
+              return updatedMessages;
+            }
+            return prev;
+          });
+        }
+      }
     } catch (error: any) {
-      console.error("Chatbot Error:", error);
-      const errorMsg = error.response?.data?.message || "Mất kết nối với máy chủ AI (ngrok).";
-      setMessages(prev => [...prev, { role: 'bot', content: errorMsg }]);
+      console.error("Chat Error:", error);
+      setMessages((prev: Message[]) => [...prev, { role: 'bot', content: "Lỗi: " + (error.message || "Mất kết nối server.") }]);
     } finally {
       setLoading(false);
     }
