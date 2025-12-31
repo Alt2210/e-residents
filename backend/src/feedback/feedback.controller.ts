@@ -31,7 +31,7 @@ export class FeedbackController {
 
   // 1. CHUYỂN ENDPOINT SEARCH LÊN TRÊN
   @Get('search')
-  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
   async search(@Query() searchDto: FeedbackSearchDto) {
     return this.feedbackService.search(searchDto);
   }
