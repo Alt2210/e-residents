@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; 
+import { useRouter, usePathname } from 'next/navigation'; // Thêm usePathname
 import { Bell, User } from 'lucide-react';
 
 export const Header = () => {
   const [userData, setUserData] = useState<{ fullName: string; role: string } | null>(null);
   const router = useRouter();
+  const pathname = usePathname(); // Khởi tạo để theo dõi route hiện tại
 
   useEffect(() => {
     // Lấy thông tin từ localStorage
@@ -20,6 +21,16 @@ export const Header = () => {
       }
     }
   }, []);
+
+  // Hàm xử lý khi nhấn vào chuông thông báo
+  const handleNotificationClick = () => {
+    // Kiểm tra nếu route hiện tại có chứa "/service"
+    if (pathname?.includes('/service')) {
+      router.push('/service/notification');
+    } else {
+      router.push('/notifications');
+    }
+  };
 
   const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -43,13 +54,17 @@ export const Header = () => {
         <p className="text-xs text-gray-400 font-medium italic">Hệ thống quản lý cư dân điện tử</p>
       </div>
       <div className="flex items-center gap-4">
-        <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-full relative">
-          <Bell size={20} onClick={() => router.push('/notifications')}/>
+        {/* Cập nhật onClick cho chuông thông báo */}
+        <button 
+          onClick={handleNotificationClick}
+          className="p-2 text-gray-400 hover:bg-gray-100 rounded-full relative transition-colors"
+        >
+          <Bell size={20} />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
+
         <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
           <div className="text-right">
-            {/* Hiển thị fullName thật thay vì 'Đang tải' */}
             <p className="text-sm font-bold text-gray-800">
               {userData?.fullName || 'Khách'}
             </p>

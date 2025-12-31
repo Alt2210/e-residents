@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsDateString, IsMongoId, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsMongoId, IsOptional, IsEnum } from 'class-validator';
 
 export class IssueAbsenceDto {
   @IsMongoId()
@@ -20,6 +20,10 @@ export class IssueAbsenceDto {
   @IsString()
   @IsNotEmpty()
   destination: string;
+
+  @IsOptional()
+  @IsEnum(['HIEU_LUC', 'HET_HAN', 'DA_HUY', 'DA_DONG', 'CHO_DUYET'])
+  trangThai?: string;
 }
 
 export class ExtendAbsenceDto {

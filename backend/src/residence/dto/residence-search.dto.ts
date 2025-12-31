@@ -14,7 +14,7 @@ export class TemporaryResidenceSearchDto {
   @IsOptional()
   toDate?: string;
 
-  @IsEnum(['HIEU_LUC', 'HET_HAN', 'DA_HUY', 'DA_DONG'])
+  @IsEnum(['HIEU_LUC', 'HET_HAN', 'DA_HUY', 'DA_DONG', 'CHO_DUYET'])
   @IsOptional()
   trangThai?: string;
 
@@ -44,7 +44,7 @@ export class AbsenceSearchDto {
   @IsOptional()
   toDate?: string;
 
-  @IsEnum(['HIEU_LUC', 'HET_HAN', 'DA_HUY', 'DA_DONG'])
+  @IsEnum(['HIEU_LUC', 'HET_HAN', 'DA_HUY', 'DA_DONG', 'CHO_DUYET'])
   @IsOptional()
   trangThai?: string;
 

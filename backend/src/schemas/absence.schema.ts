@@ -23,7 +23,7 @@ export class Absence {
   @Prop({ type: Types.ObjectId, ref: 'User' })
   issuedByUserId: Types.ObjectId; // Người cấp giấy
 
-  @Prop({ enum: ['HIEU_LUC', 'HET_HAN', 'DA_HUY', 'DA_DONG'], default: 'HIEU_LUC' })
+  @Prop({ enum: ['HIEU_LUC', 'HET_HAN', 'DA_HUY', 'DA_DONG', 'CHO_DUYET'], default: 'CHO_DUYET' })
   trangThai: string;
 
   @Prop()

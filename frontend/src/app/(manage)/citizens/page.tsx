@@ -14,7 +14,9 @@ import {
   Calendar,
   Loader2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Filter,
+  Eye
 } from "lucide-react";
 import api from "@/src/lib/api";
 
@@ -24,18 +26,37 @@ const CitizensPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // State quản lý phân trang theo yêu cầu (50 người/trang)
+  const [filters, setFilters] = useState({
+    gioiTinh: "",
+    trangThai: "",
+    ageGroup: ""
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const limit = 50;
-  // Chuyển hướng sang trang chỉnh sửa
+
+  // --- HÀM HỖ TRỢ KIỂM TRA ĐỘ TUỔI ---
+  const isNewborn = (birthDate: string) => {
+    if (!birthDate) return false;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    const ageInMilliseconds = today.getTime() - birth.getTime();
+    const ageInYears = ageInMilliseconds / (1000 * 60 * 60 * 24 * 365.25);
+    return ageInYears < 1;
+  };
+
+  const handleViewDetail = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    router.push(`/citizens/${id}`);
+  };
+
   const handleEdit = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     router.push(`/citizens/${id}/edit`);
   };
 
-  // Ghi nhận chuyển đi
   const handleMarkMoved = async (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
     const moveDate = prompt(`Nhập ngày chuyển đi cho ông/bà ${name} (YYYY-MM-DD):`, new Date().toISOString().split('T')[0]);
@@ -43,7 +64,6 @@ const CitizensPage = () => {
 
     if (moveDate && moveTo) {
       try {
-        // Gọi API PATCH /persons/:id/mark-moved
         await api.patch(`/persons/${id}/mark-moved`, { moveDate, moveTo });
         alert("Đã cập nhật trạng thái chuyển đi thành công");
         fetchCitizens();
@@ -53,14 +73,12 @@ const CitizensPage = () => {
     }
   };
 
-  // Ghi nhận khai tử
   const handleMarkDeceased = async (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
     const date = prompt(`Nhập ngày qua đời của ông/bà ${name} (YYYY-MM-DD):`, new Date().toISOString().split('T')[0]);
 
     if (date) {
       try {
-        // Gọi API PATCH /persons/:id/mark-deceased
         await api.patch(`/persons/${id}/mark-deceased`, { date });
         alert("Đã cập nhật trạng thái khai tử thành công");
         fetchCitizens();
@@ -70,8 +88,12 @@ const CitizensPage = () => {
     }
   };
 
-  // Hàm ánh xạ trạng thái sang giao diện màu sắc
-  const getStatusBadge = (status: string) => {
+  // --- HÀM RENDER BADGE TRẠNG THÁI (Đã cập nhật Mới sinh & Tiếng Việt) ---
+  const getStatusBadge = (status: string, birthDate: string) => {
+    if (isNewborn(birthDate)) {
+      return <span className="text-[10px] font-bold px-2 py-1 bg-pink-100 text-pink-700 rounded-lg">Mới sinh</span>;
+    }
+
     switch (status) {
       case 'THUONG_TRU':
         return <span className="text-[10px] font-bold px-2 py-1 bg-green-100 text-green-700 rounded-lg">Thường trú</span>;
@@ -91,10 +113,11 @@ const CitizensPage = () => {
   const fetchCitizens = useCallback(async () => {
     try {
       setLoading(true);
-      // Gọi API search để lấy dữ liệu phân trang
       const response = await api.get("/persons/search", {
         params: {
           keyword: searchTerm.trim(),
+          gioiTinh: filters.gioiTinh || undefined,
+          trangThai: filters.trangThai || undefined,
           page: currentPage,
           limit: limit
         }
@@ -109,7 +132,7 @@ const CitizensPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, currentPage, limit]);
+  }, [searchTerm, filters, currentPage, limit]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -118,10 +141,9 @@ const CitizensPage = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [fetchCitizens]);
 
-  // Quay lại trang 1 khi thực hiện tìm kiếm mới
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, filters]);
 
   const handleDelete = (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
@@ -176,16 +198,49 @@ const CitizensPage = () => {
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm theo tên, số CCCD..."
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none  rounded-2xl focus:ring-2 focus:ring-blue-500"
-          />
+      <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm theo tên, số CCCD..."
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-2xl border border-transparent focus-within:border-blue-500 transition-all">
+              <Filter size={16} className="text-gray-400" />
+              <select
+                value={filters.gioiTinh}
+                onChange={(e) => setFilters({ ...filters, gioiTinh: e.target.value })}
+                className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer"
+              >
+                <option value="">Giới tính</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-2xl border border-transparent focus-within:border-blue-500 transition-all">
+              <select
+                value={filters.trangThai}
+                onChange={(e) => setFilters({ ...filters, trangThai: e.target.value })}
+                className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer"
+              >
+                <option value="">Trạng thái cư trú</option>
+                <option value="THUONG_TRU">Thường trú</option>
+                <option value="TAM_TRU">Tạm trú</option>
+                <option value="TAM_VANG">Tạm vắng</option>
+                <option value="DA_CHUYEN_DI">Đã chuyển đi</option>
+                <option value="DA_QUA_DOI">Đã qua đời</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -233,7 +288,8 @@ const CitizensPage = () => {
                     </td>
                     <td className="p-5">
                       <div className="flex flex-col gap-1.5">
-                        {getStatusBadge(person.trangThai)}
+                        {/* CẬP NHẬT: Truyền thêm ngaySinh vào getStatusBadge */}
+                        {getStatusBadge(person.trangThai, person.ngaySinh)}
                         <div className="flex items-center gap-1 text-[10px] text-gray-400">
                           <MapPin size={10} />
                           {person.householdId?.soHoKhau ? `Sổ: ${person.householdId.soHoKhau}` : "Chưa nhập hộ"}
@@ -241,7 +297,14 @@ const CitizensPage = () => {
                       </div>
                     </td>
                     <td className="p-5 text-right flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {/* Nút Chỉnh sửa */}
+                      <button
+                        className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
+                        title="Xem chi tiết"
+                        onClick={(e) => handleViewDetail(e, person._id)}
+                      >
+                        <Eye size={16} />
+                      </button>
+
                       <button
                         className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
                         title="Chỉnh sửa"
@@ -250,7 +313,6 @@ const CitizensPage = () => {
                         <Edit2 size={16} />
                       </button>
 
-                      {/* Nút Chuyển đi */}
                       <button
                         className="p-2 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors"
                         title="Chuyển đi"
@@ -259,7 +321,6 @@ const CitizensPage = () => {
                         <UserMinus size={16} />
                       </button>
 
-                      {/* Nút Khai tử */}
                       <button
                         className="p-2 hover:bg-slate-100 hover:text-slate-900 rounded-lg transition-colors"
                         title="Khai tử"
@@ -268,7 +329,6 @@ const CitizensPage = () => {
                         <Ghost size={16} />
                       </button>
 
-                      {/* Nút Xóa hồ sơ (Sử dụng hàm xóa mềm trong Backend) */}
                       <button
                         onClick={(e) => handleDelete(e, person._id, person.hoTen)}
                         className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"

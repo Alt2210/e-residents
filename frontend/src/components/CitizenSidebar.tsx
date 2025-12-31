@@ -8,6 +8,7 @@ import {
   LogOut, 
   MessageSquare, 
   LayoutDashboard,
+  Form,
   UserCircle
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -80,6 +81,12 @@ export const CitizenSidebar = () => {
           label="Phản ánh, kiến nghị" 
           href="/service/feedback" 
           active={isActive('/service/feedback')} 
+        />
+        <NavItem 
+          icon={<Form size={20} />} 
+          label="Tạm trú/Tạm vắng" 
+          href="/service/residence" 
+          active={isActive('/service/residence')} 
         />
         <NavItem 
           icon={<Settings size={20} />} 

@@ -24,6 +24,10 @@ export class IssueTemporaryResidenceDto {
   @IsString()
   @IsOptional()
   fromProvinceOrAddress?: string;
+  
+  @IsOptional()
+  @IsEnum(['HIEU_LUC', 'HET_HAN', 'DA_HUY', 'DA_DONG', 'CHO_DUYET'])
+  trangThai?: string;
 }
 
 export class ExtendResidenceDto {

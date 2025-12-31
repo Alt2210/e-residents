@@ -37,7 +37,7 @@ export class ResidenceController {
 
   // Cấp giấy tạm trú
   @Post('temporary')
-  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
   async issueTemporaryResidence(
     @Body() dto: IssueTemporaryResidenceDto,
     @Request() req: any,
@@ -62,7 +62,7 @@ export class ResidenceController {
 
   // Tra cứu danh sách tạm trú
   @Get('temporary/search')
-  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
   async searchTemporaryResidence(@Query() searchDto: TemporaryResidenceSearchDto) {
     return this.residenceService.searchTemporaryResidence(searchDto);
   }
@@ -71,7 +71,7 @@ export class ResidenceController {
 
   // Cấp giấy tạm vắng
   @Post('absence')
-  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
   async issueAbsence(@Body() dto: IssueAbsenceDto, @Request() req: any) {
     const issuedByUserId = new Types.ObjectId(req.user.userId);
     return this.residenceService.issueAbsence(dto, issuedByUserId);
@@ -93,7 +93,7 @@ export class ResidenceController {
 
   // Tra cứu danh sách tạm vắng
   @Get('absence/search')
-  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
   async searchAbsence(@Query() searchDto: AbsenceSearchDto) {
     return this.residenceService.searchAbsence(searchDto);
   }
