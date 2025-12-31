@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; 
 import { Bell, User } from 'lucide-react';
 
 export const Header = () => {
   const [userData, setUserData] = useState<{ fullName: string; role: string } | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     // Lấy thông tin từ localStorage
@@ -42,7 +44,7 @@ export const Header = () => {
       </div>
       <div className="flex items-center gap-4">
         <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-full relative">
-          <Bell size={20} />
+          <Bell size={20} onClick={() => router.push('/notifications')}/>
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
         <div className="flex items-center gap-3 pl-4 border-l border-gray-200">

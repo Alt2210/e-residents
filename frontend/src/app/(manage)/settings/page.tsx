@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   User, Shield, Bell, Database, Save, ChevronRight, X, Loader2, 
   CheckCircle, AlertCircle // Thêm icon để làm thông báo đẹp hơn
@@ -15,6 +16,7 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const router = useRouter();
 
   // --- STATE QUẢN LÝ THÔNG BÁO (Thay thế react-hot-toast) ---
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
@@ -158,15 +160,8 @@ const SettingsPage = () => {
       id: 'notification',
       icon: <Bell />, 
       title: "Thông báo hệ thống", 
-      desc: "Tùy chọn nhận thông báo (Đang phát triển)",
-      action: () => showNotification('error', 'Tính năng đang phát triển')
-    },
-    { 
-      id: 'backup',
-      icon: <Database />, 
-      title: "Sao lưu dữ liệu", 
-      desc: "Xuất dữ liệu ra file Excel/JSON",
-      action: handleBackup
+      desc: "Xem lại các thông báo và cảnh báo từ hệ thống", // Sửa lại mô tả
+      action: () => router.push('/notifications') // SỬA DÒNG NÀY: Chuyển hướng
     },
   ];
 
