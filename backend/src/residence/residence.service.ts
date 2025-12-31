@@ -69,27 +69,41 @@ export class ResidenceService {
     const { personId, fromDate, toDate, trangThai, keyword, page = 1, limit = 10 } = searchDto;
     const query: any = {};
 
-    // Tìm kiếm theo từ khóa (Họ tên hoặc CCCD)
     if (keyword) {
-      const persons = await this.personModel.find({
-        $or: [
-          { hoTen: { $regex: keyword, $options: 'i' } },
-          { soCCCD: { $regex: keyword, $options: 'i' } }
-        ]
-      }).select('_id').exec();
-      query.personId = { $in: persons.map(p => p._id) };
+      const isObjectId = Types.ObjectId.isValid(keyword);
+
+      if (isObjectId) {
+        // Kiểm tra xem keyword có phải là ID của chính bản ghi Tạm trú không
+        const directRecord = await this.residenceModel.findById(keyword).exec();
+        if (directRecord) {
+          query._id = new Types.ObjectId(keyword);
+        } else {
+          // Nếu không phải ID bản ghi, tìm nhân khẩu có ID hoặc thông tin khớp keyword
+          const persons = await this.personModel.find({
+            $or: [
+              { hoTen: { $regex: keyword, $options: 'i' } },
+              { soCCCD: { $regex: keyword, $options: 'i' } },
+              { _id: new Types.ObjectId(keyword) }
+            ]
+          }).select('_id').exec();
+          query.personId = { $in: persons.map(p => p._id) };
+        }
+      } else {
+        // Keyword là text bình thường (Tên hoặc CCCD)
+        const persons = await this.personModel.find({
+          $or: [
+            { hoTen: { $regex: keyword, $options: 'i' } },
+            { soCCCD: { $regex: keyword, $options: 'i' } }
+          ]
+        }).select('_id').exec();
+        query.personId = { $in: persons.map(p => p._id) };
+      }
     } else if (personId) {
       query.personId = new Types.ObjectId(personId);
     }
 
     if (trangThai) {
       query.trangThai = trangThai;
-    } else {
-      const now = new Date();
-      query.$or = [
-        { trangThai: 'HIEU_LUC', denNgay: { $gte: now } },
-        { trangThai: { $ne: 'HIEU_LUC' } },
-      ];
     }
 
     if (fromDate || toDate) {
@@ -163,25 +177,40 @@ export class ResidenceService {
     const query: any = {};
 
     if (keyword) {
-      const persons = await this.personModel.find({
-        $or: [
-          { hoTen: { $regex: keyword, $options: 'i' } },
-          { soCCCD: { $regex: keyword, $options: 'i' } }
-        ]
-      }).select('_id').exec();
-      query.personId = { $in: persons.map(p => p._id) };
+      const isObjectId = Types.ObjectId.isValid(keyword);
+
+      if (isObjectId) {
+        // Kiểm tra xem keyword có phải là ID của chính bản ghi Tạm vắng không
+        const directRecord = await this.absenceModel.findById(keyword).exec();
+        if (directRecord) {
+          query._id = new Types.ObjectId(keyword);
+        } else {
+          // Nếu không phải ID bản ghi, tìm nhân khẩu có ID hoặc thông tin khớp keyword
+          const persons = await this.personModel.find({
+            $or: [
+              { hoTen: { $regex: keyword, $options: 'i' } },
+              { soCCCD: { $regex: keyword, $options: 'i' } },
+              { _id: new Types.ObjectId(keyword) }
+            ]
+          }).select('_id').exec();
+          query.personId = { $in: persons.map(p => p._id) };
+        }
+      } else {
+        // Keyword là text bình thường
+        const persons = await this.personModel.find({
+          $or: [
+            { hoTen: { $regex: keyword, $options: 'i' } },
+            { soCCCD: { $regex: keyword, $options: 'i' } }
+          ]
+        }).select('_id').exec();
+        query.personId = { $in: persons.map(p => p._id) };
+      }
     } else if (personId) {
       query.personId = new Types.ObjectId(personId);
     }
 
     if (trangThai) {
       query.trangThai = trangThai;
-    } else {
-      const now = new Date();
-      query.$or = [
-        { trangThai: 'HIEU_LUC', denNgay: { $gte: now } },
-        { trangThai: { $ne: 'HIEU_LUC' } },
-      ];
     }
 
     if (fromDate || toDate) {
@@ -205,10 +234,8 @@ export class ResidenceService {
   // ========== CẬP NHẬT TRẠNG THÁI (DÙNG CHUNG) ==========
 
   async updateStatus(id: string, trangThai: string, type: 'temporary' | 'absence' = 'temporary') {
-    // Chọn model dựa trên type
     const model = type === 'temporary' ? this.residenceModel : this.absenceModel;
 
-    // Ép kiểu model thành Model<any> để tránh lỗi TS2349 khi gọi hàm chung trên union type
     const record = await (model as Model<any>).findByIdAndUpdate(
       id,
       { $set: { trangThai } },

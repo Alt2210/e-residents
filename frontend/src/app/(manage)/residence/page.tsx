@@ -3,15 +3,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FileText, Clock, CheckCircle2, AlertCircle, Calendar, Loader2, Inbox, Check, X, Search } from 'lucide-react';
 import api from "@/src/lib/api";
-import Modal from '@/src/components/Modal'; // Đảm bảo đường dẫn này đúng
+import Modal from '@/src/components/Modal';
+import { useRouter } from 'next/navigation'; // Import useRouter để điều hướng
 
 const ResidencePage = () => {
-  const [tab, setTab] = useState('tam-tru'); // 'tam-tru' | 'tam-vang' | 'yeu-cau'
+  const router = useRouter(); // Khởi tạo router
+  const [tab, setTab] = useState('tam-tru'); 
   const [residenceList, setResidenceList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // State cho Modal thông báo và xác nhận
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -27,7 +28,6 @@ const ResidencePage = () => {
 
   const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
-  // Hàm lấy dữ liệu từ API
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -64,8 +64,8 @@ const ResidencePage = () => {
     fetchData();
   }, [fetchData]);
 
-  // Phê duyệt yêu cầu
-  const handleApprove = (id: string) => {
+  const handleApprove = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // Ngăn việc kích hoạt sự kiện click của thẻ cha (chuyển hướng)
     setModalConfig({
       isOpen: true,
       title: "Xác nhận phê duyệt",
@@ -93,8 +93,8 @@ const ResidencePage = () => {
     });
   };
 
-  // Kết thúc hoặc Từ chối yêu cầu
-  const handleClose = (id: string) => {
+  const handleClose = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // Ngăn việc kích hoạt sự kiện click của thẻ cha
     const actionText = tab === 'yeu-cau' ? "từ chối yêu cầu" : "kết thúc bản ghi";
     
     setModalConfig({
@@ -130,7 +130,6 @@ const ResidencePage = () => {
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6 font-google-sans">
-      {/* Modal Hệ thống thay thế Alert/Confirm */}
       <Modal 
         isOpen={modalConfig.isOpen} 
         onClose={closeModal} 
@@ -223,7 +222,11 @@ const ResidencePage = () => {
           </div>
         ) : residenceList.length > 0 ? (
           residenceList.map((item: any) => (
-            <div key={item._id} className="bg-white p-6 rounded-[2rem] border border-gray-100 flex flex-wrap md:flex-nowrap items-center gap-6 shadow-sm group hover:shadow-md transition-all">
+            <div 
+              key={item._id} 
+              onClick={() => router.push(`/residence/${item._id}`)} // Sự kiện click vào toàn bộ thanh
+              className="bg-white p-6 rounded-[2rem] border border-gray-100 flex flex-wrap md:flex-nowrap items-center gap-6 shadow-sm group hover:shadow-md transition-all cursor-pointer"
+            >
               <div className={`w-16 h-16 rounded-3xl flex items-center justify-center shrink-0 
                 ${tab === 'yeu-cau' ? 'bg-orange-50 text-orange-600' :
                   tab === 'tam-tru' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
@@ -263,14 +266,14 @@ const ResidencePage = () => {
                 {tab === 'yeu-cau' ? (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleApprove(item._id)}
-                      className="bg-green-600 text-white px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-green-700 flex items-center gap-2 shadow-sm"
+                      onClick={(e) => handleApprove(e, item._id)} // Thêm e để stopPropagation
+                      className="bg-green-600 text-white px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-green-700 flex items-center gap-2 shadow-sm relative z-10"
                     >
                       <Check size={18} /> Duyệt
                     </button>
                     <button
-                      onClick={() => handleClose(item._id)}
-                      className="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
+                      onClick={(e) => handleClose(e, item._id)} // Thêm e để stopPropagation
+                      className="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-red-50 hover:text-red-600 flex items-center gap-2 relative z-10"
                     >
                       <X size={18} /> Từ chối
                     </button>
@@ -284,9 +287,9 @@ const ResidencePage = () => {
                       </span>
                     </div>
                     <button
-                      onClick={() => handleClose(item._id)}
+                      onClick={(e) => handleClose(e, item._id)} // Thêm e để stopPropagation
                       disabled={item.trangThai === 'DA_DONG'}
-                      className={`p-3 rounded-2xl transition-all ${item.trangThai === 'DA_DONG' ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600'}`}
+                      className={`p-3 rounded-2xl transition-all relative z-10 ${item.trangThai === 'DA_DONG' ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600'}`}
                       title="Kết thúc bản ghi"
                     >
                       <AlertCircle size={24} />
