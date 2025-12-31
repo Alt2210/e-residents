@@ -167,7 +167,7 @@ const ChatbotPage = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Hỏi tôi về dân số, hộ khẩu hoặc thủ tục..."
-                className="w-full pl-6 pr-12 py-4 bg-white border-none rounded-3xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                className="w-full pl-6 pr-12 py-4 bg-white border-none rounded-3xl shadow-sm focus:ring-2 font-black focus:ring-blue-500 outline-none text-sm font-medium"
               />
               <button
                 onClick={handleSendMessage}

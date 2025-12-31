@@ -28,7 +28,7 @@ export default function SettingsPage() {
           <input 
             type="password" 
             placeholder="Mật khẩu cũ" 
-            className="w-full p-3 rounded-xl border border-gray-200"
+            className="w-full p-3 rounded-xl border font-black border-gray-200"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
           />
@@ -39,7 +39,7 @@ export default function SettingsPage() {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
-          <button className="w-full bg-gray-800 text-white font-bold py-3 rounded-xl hover:bg-black transition">
+          <button className="w-full bg-gray-800 text-white font-bold font-black py-3 rounded-xl hover:bg-black transition">
             Cập nhật mật khẩu
           </button>
         </form>

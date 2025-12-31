@@ -76,7 +76,7 @@ const RegistNewHouseholdPage = () => {
                   value={formData.soHoKhau} 
                   onChange={handleChange} 
                   placeholder="Ví dụ: HK2025-001"
-                  className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" 
+                  className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 font-black focus:ring-blue-500 shadow-inner" 
                 />
               </div>
               <div>
@@ -86,7 +86,7 @@ const RegistNewHouseholdPage = () => {
                   value={formData.chuHoId} 
                   onChange={handleChange} 
                   placeholder="Nhập ID nhân khẩu nếu đã có"
-                  className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" 
+                  className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 font-black focus:ring-blue-500 shadow-inner" 
                 />
               </div>
             </div>
@@ -101,19 +101,19 @@ const RegistNewHouseholdPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Số nhà *</label>
-                <input required name="soNha" value={formData.soNha} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
+                <input required name="soNha" value={formData.soNha} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl font-black focus:ring-2 focus:ring-blue-500 shadow-inner" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Đường/Phố *</label>
-                <input required name="duongPho" value={formData.duongPho} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
+                <input required name="duongPho" value={formData.duongPho} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none font-black rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phường/Xã *</label>
-                <input required name="phuong" value={formData.phuong} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
+                <input required name="phuong" value={formData.phuong} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none font-black rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện *</label>
-                <input required name="quan" value={formData.quan} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
+                <input required name="quan" value={formData.quan} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none font-black rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
               </div>
             </div>
           </section>
