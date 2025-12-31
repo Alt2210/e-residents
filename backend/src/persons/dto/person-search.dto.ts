@@ -32,6 +32,10 @@ export class PersonSearchDto {
 
   @IsString()
   @IsOptional()
+  ageGroup?: string;
+
+  @IsString()
+  @IsOptional()
   keyword?: string; // Từ khóa tìm kiếm chung
 
   @IsOptional()

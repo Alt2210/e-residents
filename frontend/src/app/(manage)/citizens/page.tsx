@@ -9,14 +9,13 @@ import {
   Trash2,
   UserMinus,
   Ghost,
-  CreditCard,
-  MapPin,
   Calendar,
   Loader2,
   ChevronLeft,
   ChevronRight,
   Filter,
-  Eye
+  Eye,
+  MapPin
 } from "lucide-react";
 import api from "@/src/lib/api";
 
@@ -26,10 +25,11 @@ const CitizensPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // 1. CẬP NHẬT STATE FILTERS: Thêm ageGroup
   const [filters, setFilters] = useState({
     gioiTinh: "",
     trangThai: "",
-    ageGroup: ""
+    ageGroup: "" 
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +37,6 @@ const CitizensPage = () => {
   const [totalItems, setTotalItems] = useState(0);
   const limit = 50;
 
-  // --- HÀM HỖ TRỢ KIỂM TRA ĐỘ TUỔI ---
   const isNewborn = (birthDate: string) => {
     if (!birthDate) return false;
     const today = new Date();
@@ -88,7 +87,6 @@ const CitizensPage = () => {
     }
   };
 
-  // --- HÀM RENDER BADGE TRẠNG THÁI (Đã cập nhật Mới sinh & Tiếng Việt) ---
   const getStatusBadge = (status: string, birthDate: string) => {
     if (isNewborn(birthDate)) {
       return <span className="text-[10px] font-bold px-2 py-1 bg-pink-100 text-pink-700 rounded-lg">Mới sinh</span>;
@@ -118,6 +116,7 @@ const CitizensPage = () => {
           keyword: searchTerm.trim(),
           gioiTinh: filters.gioiTinh || undefined,
           trangThai: filters.trangThai || undefined,
+          ageGroup: filters.ageGroup || undefined, 
           page: currentPage,
           limit: limit
         }
@@ -212,6 +211,25 @@ const CitizensPage = () => {
           </div>
 
           <div className="flex flex-wrap gap-3 items-center">
+            {/* 3. UI BỘ LỌC ĐỘ TUỔI */}
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-2xl border border-transparent focus-within:border-blue-500 transition-all">
+              <Calendar size={16} className="text-gray-400" />
+              <select
+                value={filters.ageGroup}
+                onChange={(e) => setFilters({ ...filters, ageGroup: e.target.value })}
+                className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer"
+              >
+                <option value="">Độ tuổi</option>
+                <option value="0-1">Mới sinh (0-1)</option>
+                <option value="1-5">Mầm non (1-5)</option>
+                <option value="6-10">Cấp 1 (6-10)</option>
+                <option value="11-14">Cấp 2 (11-14)</option>
+                <option value="15-17">Cấp 3 (15-17)</option>
+                <option value="18-60">Lao động (18-60)</option>
+                <option value="60+">Nghỉ hưu (60+)</option>
+              </select>
+            </div>
+
             <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-2xl border border-transparent focus-within:border-blue-500 transition-all">
               <Filter size={16} className="text-gray-400" />
               <select
@@ -288,7 +306,6 @@ const CitizensPage = () => {
                     </td>
                     <td className="p-5">
                       <div className="flex flex-col gap-1.5">
-                        {/* CẬP NHẬT: Truyền thêm ngaySinh vào getStatusBadge */}
                         {getStatusBadge(person.trangThai, person.ngaySinh)}
                         <div className="flex items-center gap-1 text-[10px] text-gray-400">
                           <MapPin size={10} />
