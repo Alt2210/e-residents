@@ -2,19 +2,22 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Home, Info, MapPin } from "lucide-react";
+import { ArrowLeft, Save, Home, Info, MapPin, CheckCircle } from "lucide-react";
 import api from "@/src/lib/api";
+import Modal from "@/src/components/Modal"; // Đảm bảo đường dẫn đúng tới file Modal bạn vừa tạo
 
 const RegistNewHouseholdPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // State điều khiển Modal thành công
+  
   const [formData, setFormData] = useState({
     soHoKhau: "",
     soNha: "",
     duongPho: "",
     phuong: "",
     quan: "",
-    chuHoId: "" // Có thể để trống nếu lập hộ trước, thêm nhân khẩu sau
+    chuHoId: "" 
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,16 +29,21 @@ const RegistNewHouseholdPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Gọi API POST /households dựa trên HouseholdsController
       await api.post("/households", formData);
-      alert("Lập sổ hộ khẩu mới thành công!");
-      router.push("/households");
+      // Thay vì alert, hiển thị modal
+      setShowSuccessModal(true);
     } catch (error: any) {
       console.error("Lỗi đăng ký hộ khẩu:", error.response?.data);
       alert("Lỗi: " + (error.response?.data?.message || "Không thể tạo hộ khẩu. Vui lòng kiểm tra lại số hộ khẩu."));
     } finally {
       setLoading(false);
     }
+  };
+
+  // Hàm xử lý khi đóng modal thành công -> chuyển hướng về trang danh sách
+  const handleCloseSuccess = () => {
+    setShowSuccessModal(false);
+    router.push("/households");
   };
 
   return (
@@ -76,7 +84,7 @@ const RegistNewHouseholdPage = () => {
                   value={formData.soHoKhau} 
                   onChange={handleChange} 
                   placeholder="Ví dụ: HK2025-001"
-                  className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2  focus:ring-blue-500 shadow-inner" 
+                  className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" 
                 />
               </div>
               <div>
@@ -86,7 +94,7 @@ const RegistNewHouseholdPage = () => {
                   value={formData.chuHoId} 
                   onChange={handleChange} 
                   placeholder="Nhập ID nhân khẩu nếu đã có"
-                  className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2  focus:ring-blue-500 shadow-inner" 
+                  className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" 
                 />
               </div>
             </div>
@@ -101,19 +109,19 @@ const RegistNewHouseholdPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Số nhà *</label>
-                <input required name="soNha" value={formData.soNha} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-blue-500 shadow-inner" />
+                <input required name="soNha" value={formData.soNha} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Đường/Phố *</label>
-                <input required name="duongPho" value={formData.duongPho} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none  rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
+                <input required name="duongPho" value={formData.duongPho} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phường/Xã *</label>
-                <input required name="phuong" value={formData.phuong} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none  rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
+                <input required name="phuong" value={formData.phuong} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Quận/Huyện *</label>
-                <input required name="quan" value={formData.quan} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none  rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
+                <input required name="quan" value={formData.quan} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 shadow-inner" />
               </div>
             </div>
           </section>
@@ -132,6 +140,35 @@ const RegistNewHouseholdPage = () => {
           </div>
         </form>
       </div>
+
+      {/* --- MODAL THÀNH CÔNG --- */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={handleCloseSuccess}
+        title="Đăng ký thành công"
+        maxWidth="max-w-sm" // Modal nhỏ gọn
+        footer={
+          <button 
+            onClick={handleCloseSuccess}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition-all"
+          >
+            Về danh sách hộ khẩu
+          </button>
+        }
+      >
+        <div className="flex flex-col items-center justify-center py-4 text-center space-y-4">
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+            <CheckCircle size={48} />
+          </div>
+          <div>
+            <h4 className="text-xl font-bold text-gray-800">Đã lập sổ hộ khẩu!</h4>
+            <p className="text-gray-500 mt-2">
+              Số hộ khẩu <span className="font-bold text-blue-600">{formData.soHoKhau}</span> đã được tạo thành công trong hệ thống.
+            </p>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 };
