@@ -95,7 +95,7 @@ const ResidencePage = () => {
                     {/* SỬA LỖI: Dùng hoTen thay vì fullName */}
                     {item.personId?.hoTen || "N/A"}
                   </h4>
-                  <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-black rounded-lg uppercase tracking-tighter">
+                  <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[10px]  rounded-lg uppercase tracking-tighter">
                     {/* SỬA LỖI: Dùng soCCCD thay vì idCard */}
                     {item.personId?.soCCCD || "CHƯA CÓ CCCD"}
                   </span>

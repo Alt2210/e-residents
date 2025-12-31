@@ -102,6 +102,6 @@ const StatCard = ({ icon, label, value, color, bgColor }: any) => (
       {icon}
     </div>
     <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">{label}</p>
-    <p className="text-lg font-black text-gray-800 mt-1">{value || 'Chưa có dữ liệu'}</p>
+    <p className="text-lg  text-gray-800 mt-1">{value || 'Chưa có dữ liệu'}</p>
   </div>
 );

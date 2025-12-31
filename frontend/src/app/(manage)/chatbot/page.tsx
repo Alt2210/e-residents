@@ -27,40 +27,66 @@ const ChatbotPage = () => {
     }
   }, [messages, loading]);
 
-  // 3. Hàm gửi tin nhắn tới Backend
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || loading) return;
+  if (!inputValue.trim() || loading) return;
 
-    const userMessage = inputValue.trim();
-    setInputValue("");
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setLoading(true);
+  const userMessage = inputValue.trim();
+  setInputValue("");
+  // 1. Sửa lỗi TS ở đây
+  setMessages((prev: Message[]) => [...prev, { role: 'user', content: userMessage }]);
+  setLoading(true);
 
-    try {
-      const response = await api.post('/chatbot/ask', {
-        message: userMessage,
-        sessionId: sessionId
-      });
+  try {
+    // 2. Dùng địa chỉ Ngrok trực tiếp và đúng endpoint /chat_stream
+    const API_URL = "https://raspiest-larue-melanistic.ngrok-free.dev/chat_stream";
 
-      // Xử lý linh hoạt các kiểu dữ liệu trả về từ proxy NestJS
-      let botReply = "";
-      if (typeof response.data.reply === 'string') {
-        botReply = response.data.reply;
-      } else if (response.data.reply?.response) {
-        botReply = response.data.reply.response;
-      } else {
-        botReply = JSON.stringify(response.data.reply);
-      }
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // BẮT BUỘC có header này để vượt qua trang cảnh báo của Ngrok
+        'ngrok-skip-browser-warning': '69420', 
+      },
+      body: JSON.stringify({
+        query: userMessage,     // Khớp với ChatRequest.query trong Python
+        session_id: sessionId 
+      }),
+    });
 
-      setMessages(prev => [...prev, { role: 'bot', content: botReply }]);
-    } catch (error: any) {
-      console.error("Chatbot Error:", error);
-      const errorMsg = error.response?.data?.message || "Mất kết nối với máy chủ AI (ngrok).";
-      setMessages(prev => [...prev, { role: 'bot', content: errorMsg }]);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+       const errorText = await response.text();
+       throw new Error(`Server báo lỗi: ${response.status} - ${errorText}`);
     }
-  };
+
+    // 3. Sửa lỗi TS khi tạo bubble trống
+    setMessages((prev: Message[]) => [...prev, { role: 'bot', content: "" }]);
+
+    const reader = response.body?.getReader();
+    if (!reader) return;
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+
+      // 4. Sửa lỗi TS khi cập nhật stream
+      setMessages((prev: Message[]) => {
+        const newMsgs = [...prev];
+        const last = newMsgs[newMsgs.length - 1];
+        if (last && last.role === 'bot') {
+          last.content += chunk;
+        }
+        return newMsgs;
+      });
+    }
+  } catch (error: any) {
+    console.error("Lỗi kết nối:", error);
+    setMessages((prev: Message[]) => [...prev, { role: 'bot', content: "Lỗi kết nối server AI. Hãy kiểm tra console F12." }]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleSendMessage();
@@ -78,7 +104,7 @@ const ChatbotPage = () => {
             <Bot size={28} />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">Trợ lý ảo AI</h2>
+            <h2 className="text-2xl  text-gray-900 tracking-tight">Trợ lý ảo AI</h2>
             <div className="flex items-center gap-1.5">
               <span className={`w-2 h-2 ${loading ? 'bg-orange-500 animate-bounce' : 'bg-green-500'} rounded-full`}></span>
               <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -141,7 +167,7 @@ const ChatbotPage = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Hỏi tôi về dân số, hộ khẩu hoặc thủ tục..."
-                className="w-full pl-6 pr-12 py-4 bg-white border-none rounded-3xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                className="w-full pl-6 pr-12 py-4 bg-white border-none rounded-3xl shadow-sm focus:ring-2  focus:ring-blue-500 outline-none text-sm font-medium"
               />
               <button
                 onClick={handleSendMessage}

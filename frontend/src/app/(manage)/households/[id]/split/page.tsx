@@ -167,9 +167,9 @@ const SplitHouseholdPage = () => {
                       name="newHeadPersonId" 
                       checked={formData.newHeadPersonId === member._id}
                       onChange={() => setFormData(f => ({ ...f, newHeadPersonId: member._id }))}
-                      className="w-4 h-4 accent-orange-600 cursor-pointer"
+                      className="w-4 h-4 accent-orange-600 cursor-pointer "
                     />
-                    <label htmlFor={`head-${member._id}`} className="text-[10px] font-black text-orange-600 cursor-pointer uppercase">Chủ hộ mới</label>
+                    <label htmlFor={`head-${member._id}`} className="text-[10px]  text-orange-600 cursor-pointer uppercase">Chủ hộ mới</label>
                   </div>
                 )}
               </div>
@@ -188,27 +188,27 @@ const SplitHouseholdPage = () => {
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-4">
               <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Số sổ hộ khẩu mới *</label>
-                <input required name="newSoHoKhau" value={formData.newSoHoKhau} onChange={handleInputChange} placeholder="VD: HK-2025-..." className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-orange-500 transition-all" />
+                <label className="block text-[10px]  text-gray-400 uppercase tracking-widest mb-1">Số sổ hộ khẩu mới *</label>
+                <input required name="newSoHoKhau" value={formData.newSoHoKhau} onChange={handleInputChange} placeholder="VD: HK-2025-..." className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2  focus:ring-orange-500 transition-all" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Số nhà *</label>
-                  <input required name="newSoNha" value={formData.newSoNha} onChange={handleInputChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-orange-500" />
+                  <label className="block text-[10px]  text-gray-400 uppercase tracking-widest mb-1">Số nhà *</label>
+                  <input required name="newSoNha" value={formData.newSoNha} onChange={handleInputChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2  focus:ring-orange-500" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Đường/Phố *</label>
-                  <input required name="newDuongPho" value={formData.newDuongPho} onChange={handleInputChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-orange-500" />
+                  <label className="block text-[10px]  text-gray-400 uppercase tracking-widest mb-1">Đường/Phố *</label>
+                  <input required name="newDuongPho" value={formData.newDuongPho} onChange={handleInputChange} className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-orange-500" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Phường *</label>
-                  <input required name="newPhuong" value={formData.newPhuong} onChange={handleInputChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-orange-500" />
+                  <label className="block text-[10px]  text-gray-400 uppercase tracking-widest mb-1">Phường *</label>
+                  <input required name="newPhuong" value={formData.newPhuong} onChange={handleInputChange} className="w-full p-3 bg-gray-50 border-none  rounded-xl focus:ring-2 focus:ring-orange-500" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Quận *</label>
-                  <input required name="newQuan" value={formData.newQuan} onChange={handleInputChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-orange-500" />
+                  <label className="block text-[10px]  text-gray-400 uppercase tracking-widest mb-1">Quận *</label>
+                  <input required name="newQuan" value={formData.newQuan} onChange={handleInputChange} className="w-full p-3 bg-gray-50 border-none  rounded-xl focus:ring-2 focus:ring-orange-500" />
                 </div>
               </div>
 

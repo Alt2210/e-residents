@@ -65,7 +65,7 @@ export default function PersonalInfo() {
             <InfoItem icon={<MapPin className="text-red-500" size={20}/>} label="Quan hệ với chủ hộ" value={person?.quanHeVoiChuHo} />
             <div className="pt-4 border-t border-gray-50">
                <p className="text-[10px] text-gray-400 uppercase font-bold mb-2">Trạng thái hiện tại</p>
-              <span className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${person?.trangThai === 'THUONG_TRU' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
+              <span className={`px-4 py-2 rounded-xl text-xs  uppercase tracking-widest ${person?.trangThai === 'THUONG_TRU' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
                 {person?.trangThai?.replace('_', ' ') || 'KHÔNG XÁC ĐỊNH'}
               </span>
             </div>

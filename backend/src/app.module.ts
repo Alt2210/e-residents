@@ -15,6 +15,7 @@ import { StatisticsModule } from './statistics/statistics.module';
 import { ResidenceModule } from './residence/residence.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { NotificationsModule } from './notification/notification.module';
 @Module({
   imports: [
     // 1. Đọc biến môi trường từ file .env
@@ -38,6 +39,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     StatisticsModule,
     ResidenceModule,
     ChatbotModule,
+    NotificationsModule
   ],
 })
 export class AppModule {}

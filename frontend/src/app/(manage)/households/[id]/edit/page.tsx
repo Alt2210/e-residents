@@ -86,23 +86,23 @@ const EditHouseholdPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Số sổ hộ khẩu *</label>
-              <input required name="soHoKhau" value={formData.soHoKhau} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500" />
+              <input required name="soHoKhau" value={formData.soHoKhau} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none  rounded-xl focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Số nhà *</label>
-              <input required name="soNha" value={formData.soNha} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500" />
+              <input required name="soNha" value={formData.soNha} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Đường/Phố *</label>
-              <input required name="duongPho" value={formData.duongPho} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500" />
+              <input required name="duongPho" value={formData.duongPho} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none   rounded-xl focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phường *</label>
-              <input required name="phuong" value={formData.phuong} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500" />
+              <input required name="phuong" value={formData.phuong} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none  rounded-xl focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Quận *</label>
-              <input required name="quan" value={formData.quan} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500" />
+              <input required name="quan" value={formData.quan} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
 

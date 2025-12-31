@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, User, Loader2, CheckCircle } from "lucide-react";
 import api from "@/src/lib/api";
+import Modal from "@/src/components/Modal"; // Đảm bảo đường dẫn đúng
 
 // 1. Định nghĩa cấu trúc dữ liệu cho Form
 interface CitizenRegistration {
@@ -30,6 +31,7 @@ interface CitizenRegistration {
 const RegistNewCitizenPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false); // State cho Modal
 
   // 2. Khởi tạo State với Interface
   const [formData, setFormData] = useState<CitizenRegistration>({
@@ -66,10 +68,9 @@ const RegistNewCitizenPage = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Tạo bản sao và ép kiểu sang any để có thể xóa các thuộc tính trống
     const submitData: any = { ...formData };
 
-    // Xử lý các trường không bắt buộc: Nếu trống thì xóa khỏi object gửi đi
+    // Xóa các trường rỗng không bắt buộc
     if (!submitData.ngayCapCCCD) delete submitData.ngayCapCCCD;
     if (!submitData.soCCCD) delete submitData.soCCCD;
     if (!submitData.biDanh) delete submitData.biDanh;
@@ -78,8 +79,8 @@ const RegistNewCitizenPage = () => {
 
     try {
       await api.post("/persons", submitData);
-      alert("Đăng ký nhân khẩu thành công!");
-      router.push("/citizens");
+      // Hiển thị Modal thay vì alert
+      setShowSuccessModal(true);
     } catch (error: any) {
       console.error("Lỗi đăng ký:", error.response?.data);
       const serverMessage = error.response?.data?.message;
@@ -92,6 +93,12 @@ const RegistNewCitizenPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Xử lý đóng modal và chuyển trang
+  const handleCloseSuccess = () => {
+    setShowSuccessModal(false);
+    router.push("/citizens");
   };
 
   return (
@@ -260,6 +267,34 @@ const RegistNewCitizenPage = () => {
           </div>
         </form>
       </div>
+
+      {/* --- MODAL THÀNH CÔNG --- */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={handleCloseSuccess}
+        title="Đăng ký thành công"
+        maxWidth="max-w-sm"
+        footer={
+          <button
+            onClick={handleCloseSuccess}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition-all"
+          >
+            Về danh sách nhân khẩu
+          </button>
+        }
+      >
+        <div className="flex flex-col items-center justify-center py-4 text-center space-y-4">
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+            <CheckCircle size={48} />
+          </div>
+          <div>
+            <h4 className="text-xl font-bold text-gray-800">Đã thêm nhân khẩu!</h4>
+            <p className="text-gray-500 mt-2">
+              Nhân khẩu <span className="font-bold text-blue-600">{formData.hoTen}</span> đã được thêm vào hệ thống thành công.
+            </p>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

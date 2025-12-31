@@ -94,7 +94,7 @@ const HouseholdDetailPage = () => {
               </div>
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-black tracking-tight">Số hộ khẩu: {household.soHoKhau}</h1>
+                  <h1 className="text-3xl  tracking-tight">Số hộ khẩu: {household.soHoKhau}</h1>
                   {household.isActive ? (
                     <span className="flex items-center gap-1 px-3 py-1 bg-green-400/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
                       <CheckCircle2 size={12} /> Đang hoạt động
@@ -134,7 +134,7 @@ const HouseholdDetailPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-white rounded-2xl border border-gray-100 text-center">
                 <p className="text-xs text-gray-400 mb-1">Thành viên</p>
-                <p className="text-xl font-black text-blue-600">{persons?.length || 0}</p>
+                <p className="text-xl  text-blue-600">{persons?.length || 0}</p>
               </div>
               <div className="p-4 bg-white rounded-2xl border border-gray-100 text-center">
                 <p className="text-xs text-gray-400 mb-1">Ngày lập sổ</p>

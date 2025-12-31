@@ -1,19 +1,37 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common'; // Thêm Res ở đây
 import { ChatbotService } from './chatbot.service';
-import { ApiTags, ApiOperation } from '@nestjs/swagger'; // Import thêm
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Response } from 'express'; // Import type để có gợi ý code tốt hơn
 
-@ApiTags('Chatbot') // Thêm tag này để Swagger phân nhóm API Chatbot
+@ApiTags('Chatbot')
 @Controller('chatbot')
 export class ChatbotController {
   constructor(private readonly chatbotService: ChatbotService) {}
 
   @Post('ask')
-  @ApiOperation({ summary: 'Gửi câu hỏi cho trợ lý ảo AI' }) // Thêm mô tả cho API
+  @ApiOperation({ summary: 'Gửi câu hỏi và nhận phản hồi dạng stream' })
   async ask(
-    @Body('message') message: string, 
-    @Body('sessionId') sessionId: string
+    @Body('query') query: string,          
+    @Body('session_id') session_id: string, 
+    @Res() res: Response                   
   ) {
-    const id = sessionId || 'session-' + Date.now();
-    return this.chatbotService.chat(message, id);
+    try {
+      const stream = await this.chatbotService.chat(query, session_id);
+
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Transfer-Encoding', 'chunked');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      stream.pipe(res);
+
+      stream.on('error', (err) => {
+        console.error('Stream error:', err);
+        res.end();
+      });
+    } catch (error) {
+      console.error('Lỗi khi khởi tạo stream:', error.message);
+      res.status(502).send('AI Server không phản hồi hoặc lỗi kết nối.');
+    }
   }
 }
