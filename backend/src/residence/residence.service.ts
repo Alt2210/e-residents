@@ -16,17 +16,12 @@ export class ResidenceService {
     @InjectModel(Person.name) private personModel: Model<PersonDocument>,
   ) {}
 
-  // ========== TẠM TRÚ ==========
+  // ========== TẠM TRÚ (TEMPORARY RESIDENCE) ==========
 
-  // Cấp giấy tạm trú
   async issueTemporaryResidence(dto: IssueTemporaryResidenceDto, issuedByUserId: Types.ObjectId): Promise<TemporaryResidenceDocument> {
-    // Kiểm tra người có tồn tại
     const person = await this.personModel.findById(dto.personId).exec();
-    if (!person) {
-      throw new NotFoundException('Không tìm thấy nhân khẩu');
-    }
+    if (!person) throw new NotFoundException('Không tìm thấy nhân khẩu');
 
-    // Kiểm tra ngày hợp lệ
     if (new Date(dto.toDate) <= new Date(dto.fromDate)) {
       throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu');
     }
@@ -40,59 +35,56 @@ export class ResidenceService {
       tuTinhThanh: dto.fromProvinceOrAddress,
       lyDo: dto.reason,
       issuedByUserId,
-      trangThai: 'HIEU_LUC',
+      trangThai: dto.trangThai || 'CHO_DUYET',
     });
 
     return residence.save();
   }
 
-  // Gia hạn giấy tạm trú
   async extendResidence(recordId: string, dto: ExtendResidenceDto): Promise<TemporaryResidenceDocument> {
     const residence = await this.residenceModel.findById(recordId).exec();
-    if (!residence) {
-      throw new NotFoundException('Không tìm thấy giấy tạm trú');
-    }
+    if (!residence) throw new NotFoundException('Không tìm thấy giấy tạm trú');
 
     if (residence.trangThai !== 'HIEU_LUC') {
       throw new BadRequestException('Chỉ có thể gia hạn giấy tạm trú đang hiệu lực');
     }
 
     residence.denNgay = dto.newToDate;
-    if (dto.note) {
-      residence.ghiChu = (residence.ghiChu || '') + `; Gia hạn: ${dto.note}`;
-    }
+    if (dto.note) residence.ghiChu = (residence.ghiChu || '') + `; Gia hạn: ${dto.note}`;
 
     return residence.save();
   }
 
-  // Kết thúc/đóng giấy tạm trú
   async closeResidence(recordId: string, dto: CloseResidenceDto): Promise<TemporaryResidenceDocument> {
     const residence = await this.residenceModel.findById(recordId).exec();
-    if (!residence) {
-      throw new NotFoundException('Không tìm thấy giấy tạm trú');
-    }
+    if (!residence) throw new NotFoundException('Không tìm thấy giấy tạm trú');
 
     residence.trangThai = 'DA_DONG';
-    if (dto.note) {
-      residence.ghiChu = (residence.ghiChu || '') + `; Đóng: ${dto.note}`;
-    }
+    if (dto.note) residence.ghiChu = (residence.ghiChu || '') + `; Đóng: ${dto.note}`;
 
     return residence.save();
   }
 
-  // Tra cứu danh sách tạm trú
   async searchTemporaryResidence(searchDto: TemporaryResidenceSearchDto) {
-    const { personId, fromDate, toDate, trangThai, page = 1, limit = 10 } = searchDto;
+    const { personId, fromDate, toDate, trangThai, keyword, page = 1, limit = 10 } = searchDto;
     const query: any = {};
 
-    if (personId) {
+    // Tìm kiếm theo từ khóa (Họ tên hoặc CCCD)
+    if (keyword) {
+      const persons = await this.personModel.find({
+        $or: [
+          { hoTen: { $regex: keyword, $options: 'i' } },
+          { soCCCD: { $regex: keyword, $options: 'i' } }
+        ]
+      }).select('_id').exec();
+      query.personId = { $in: persons.map(p => p._id) };
+    } else if (personId) {
       query.personId = new Types.ObjectId(personId);
     }
 
     if (trangThai) {
       query.trangThai = trangThai;
     } else {
-      // Nếu không chỉ định, lọc tự động theo ngày hiệu lực
       const now = new Date();
       query.$or = [
         { trangThai: 'HIEU_LUC', denNgay: { $gte: now } },
@@ -101,38 +93,28 @@ export class ResidenceService {
     }
 
     if (fromDate || toDate) {
-      query.$and = [];
-      if (fromDate) {
-        query.$and.push({ tuNgay: { $gte: new Date(fromDate) } });
-      }
-      if (toDate) {
-        query.$and.push({ denNgay: { $lte: new Date(toDate) } });
-      }
+      const dateQuery: any = {};
+      if (fromDate) dateQuery.$gte = new Date(fromDate);
+      if (toDate) dateQuery.$lte = new Date(toDate);
+      query.tuNgay = dateQuery;
     }
 
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-      this.residenceModel.find(query).skip(skip).limit(limit).populate('personId', 'hoTen soCCCD').populate('issuedByUserId', 'username fullName').exec(),
+      this.residenceModel.find(query).skip(skip).limit(limit)
+        .populate('personId', 'hoTen soCCCD')
+        .populate('issuedByUserId', 'username fullName').exec(),
       this.residenceModel.countDocuments(query).exec(),
     ]);
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  // ========== TẠM VẮNG ==========
+  // ========== TẠM VẮNG (ABSENCE) ==========
 
-  // Cấp giấy tạm vắng
   async issueAbsence(dto: IssueAbsenceDto, issuedByUserId: Types.ObjectId): Promise<AbsenceDocument> {
     const person = await this.personModel.findById(dto.personId).exec();
-    if (!person) {
-      throw new NotFoundException('Không tìm thấy nhân khẩu');
-    }
+    if (!person) throw new NotFoundException('Không tìm thấy nhân khẩu');
 
     if (new Date(dto.toDate) <= new Date(dto.fromDate)) {
       throw new BadRequestException('Ngày kết thúc phải sau ngày bắt đầu');
@@ -146,52 +128,49 @@ export class ResidenceService {
       noiDen: dto.destination,
       lyDo: dto.reason,
       issuedByUserId,
-      trangThai: 'HIEU_LUC',
+      trangThai: dto.trangThai || 'CHO_DUYET',
     });
 
     return absence.save();
   }
 
-  // Gia hạn giấy tạm vắng
   async extendAbsence(recordId: string, dto: ExtendAbsenceDto): Promise<AbsenceDocument> {
     const absence = await this.absenceModel.findById(recordId).exec();
-    if (!absence) {
-      throw new NotFoundException('Không tìm thấy giấy tạm vắng');
-    }
+    if (!absence) throw new NotFoundException('Không tìm thấy giấy tạm vắng');
 
     if (absence.trangThai !== 'HIEU_LUC') {
       throw new BadRequestException('Chỉ có thể gia hạn giấy tạm vắng đang hiệu lực');
     }
 
     absence.denNgay = dto.newToDate;
-    if (dto.note) {
-      absence.ghiChu = (absence.ghiChu || '') + `; Gia hạn: ${dto.note}`;
-    }
+    if (dto.note) absence.ghiChu = (absence.ghiChu || '') + `; Gia hạn: ${dto.note}`;
 
     return absence.save();
   }
 
-  // Kết thúc/đóng giấy tạm vắng
   async closeAbsence(recordId: string, dto: CloseAbsenceDto): Promise<AbsenceDocument> {
     const absence = await this.absenceModel.findById(recordId).exec();
-    if (!absence) {
-      throw new NotFoundException('Không tìm thấy giấy tạm vắng');
-    }
+    if (!absence) throw new NotFoundException('Không tìm thấy giấy tạm vắng');
 
     absence.trangThai = 'DA_DONG';
-    if (dto.note) {
-      absence.ghiChu = (absence.ghiChu || '') + `; Đóng: ${dto.note}`;
-    }
+    if (dto.note) absence.ghiChu = (absence.ghiChu || '') + `; Đóng: ${dto.note}`;
 
     return absence.save();
   }
 
-  // Tra cứu danh sách tạm vắng
   async searchAbsence(searchDto: AbsenceSearchDto) {
-    const { personId, fromDate, toDate, trangThai, page = 1, limit = 10 } = searchDto;
+    const { personId, fromDate, toDate, trangThai, keyword, page = 1, limit = 10 } = searchDto;
     const query: any = {};
 
-    if (personId) {
+    if (keyword) {
+      const persons = await this.personModel.find({
+        $or: [
+          { hoTen: { $regex: keyword, $options: 'i' } },
+          { soCCCD: { $regex: keyword, $options: 'i' } }
+        ]
+      }).select('_id').exec();
+      query.personId = { $in: persons.map(p => p._id) };
+    } else if (personId) {
       query.personId = new Types.ObjectId(personId);
     }
 
@@ -206,28 +185,40 @@ export class ResidenceService {
     }
 
     if (fromDate || toDate) {
-      query.$and = [];
-      if (fromDate) {
-        query.$and.push({ tuNgay: { $gte: new Date(fromDate) } });
-      }
-      if (toDate) {
-        query.$and.push({ denNgay: { $lte: new Date(toDate) } });
-      }
+      const dateQuery: any = {};
+      if (fromDate) dateQuery.$gte = new Date(fromDate);
+      if (toDate) dateQuery.$lte = new Date(toDate);
+      query.tuNgay = dateQuery;
     }
 
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-      this.absenceModel.find(query).skip(skip).limit(limit).populate('personId', 'hoTen soCCCD').populate('issuedByUserId', 'username fullName').exec(),
+      this.absenceModel.find(query).skip(skip).limit(limit)
+        .populate('personId', 'hoTen soCCCD')
+        .populate('issuedByUserId', 'username fullName').exec(),
       this.absenceModel.countDocuments(query).exec(),
     ]);
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  // ========== CẬP NHẬT TRẠNG THÁI (DÙNG CHUNG) ==========
+
+  async updateStatus(id: string, trangThai: string, type: 'temporary' | 'absence' = 'temporary') {
+    // Chọn model dựa trên type
+    const model = type === 'temporary' ? this.residenceModel : this.absenceModel;
+
+    // Ép kiểu model thành Model<any> để tránh lỗi TS2349 khi gọi hàm chung trên union type
+    const record = await (model as Model<any>).findByIdAndUpdate(
+      id,
+      { $set: { trangThai } },
+      { new: true },
+    ).exec();
+
+    if (!record) {
+      throw new NotFoundException(`Không tìm thấy bản ghi ${type === 'temporary' ? 'tạm trú' : 'tạm vắng'}`);
+    }
+
+    return record;
   }
 }
-

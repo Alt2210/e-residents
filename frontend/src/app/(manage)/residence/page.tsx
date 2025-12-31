@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FileText, Clock, CheckCircle2, AlertCircle, Calendar, Loader2, Inbox, Check, X, Search } from 'lucide-react';
 import api from "@/src/lib/api";
+import Modal from '@/src/components/Modal'; // Đảm bảo đường dẫn này đúng
 
 const ResidencePage = () => {
   const [tab, setTab] = useState('tam-tru'); // 'tam-tru' | 'tam-vang' | 'yeu-cau'
@@ -10,34 +11,39 @@ const ResidencePage = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // State cho Modal thông báo và xác nhận
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'confirm' | 'error';
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'success',
+  });
+
+  const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
   // Hàm lấy dữ liệu từ API
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Xác định endpoint dựa trên Tab
-      // Tab 'yeu-cau' thực chất là tìm kiếm TemporaryResidence với trạng thái CHO_DUYET
-      const endpoint = (tab === 'tam-tru' || tab === 'yeu-cau') 
-        ? "/residence/temporary/search" 
+      const endpoint = (tab === 'tam-tru' || tab === 'yeu-cau')
+        ? "/residence/temporary/search"
         : "/residence/absence/search";
 
-      /**
-       * CẤU HÌNH PARAMS KHỚP CHÍNH XÁC VỚI DTO BACKEND:
-       * - Không gửi 'keyword' nếu Backend DTO chưa khai báo trường này để tránh lỗi 400 (forbidNonWhitelisted)
-       * - Sử dụng 'trangThai' thay vì 'status'
-       */
-      const params: any = {
+      const params = {
         page: 1,
         limit: 50,
-        trangThai: tab === 'yeu-cau' ? 'CHO_DUYET' : 'HIEU_LUC'
+        trangThai: tab === 'yeu-cau' ? 'CHO_DUYET' : 'HIEU_LUC',
+        keyword: searchTerm.trim() || undefined
       };
-
-      // Lưu ý: Chỉ bỏ comment dòng dưới nếu bạn đã thêm @IsString() keyword?: string vào file Backend DTO
-      // if (searchTerm.trim()) params.keyword = searchTerm.trim();
 
       const response = await api.get(endpoint, { params });
 
-      // Xử lý dữ liệu trả về
       let finalData = [];
       if (Array.isArray(response.data)) {
         finalData = response.data;
@@ -47,84 +53,161 @@ const ResidencePage = () => {
 
       setResidenceList(finalData);
     } catch (error: any) {
-      console.error("Lỗi API (400 Bad Request): Hãy kiểm tra xem params có dư thừa trường nào không.");
+      console.error("Lỗi API:", error);
       setResidenceList([]);
     } finally {
       setLoading(false);
     }
-  }, [tab]); // Chỉ fetch lại khi chuyển Tab. Nếu dùng tìm kiếm thực thụ, thêm searchTerm vào đây.
+  }, [tab, searchTerm]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Phê duyệt yêu cầu (Chuyển CHO_DUYET thành HIEU_LUC)
-  const handleApprove = async (id: string) => {
-    if (!confirm("Bạn có đồng ý phê duyệt yêu cầu này không?")) return;
-    try {
-      // Sử dụng PUT/PATCH tùy theo route bạn định nghĩa ở Backend để cập nhật trangThai
-      await api.put(`/residence/temporary/${id}`, { trangThai: 'HIEU_LUC' });
-      alert("Đã phê duyệt thành công!");
-      fetchData();
-    } catch (error) {
-      alert("Lỗi khi phê duyệt. Đảm bảo Backend có route PUT /residence/temporary/:id");
-    }
+  // Phê duyệt yêu cầu
+  const handleApprove = (id: string) => {
+    setModalConfig({
+      isOpen: true,
+      title: "Xác nhận phê duyệt",
+      message: "Bạn có đồng ý phê duyệt yêu cầu cư trú này không?",
+      type: 'confirm',
+      onConfirm: async () => {
+        try {
+          await api.patch(`/residence/temporary/${id}/status`, { trangThai: 'HIEU_LUC' });
+          setModalConfig({
+            isOpen: true,
+            title: "Thành công",
+            message: "Đã phê duyệt yêu cầu thành công!",
+            type: 'success'
+          });
+          fetchData();
+        } catch (error) {
+          setModalConfig({
+            isOpen: true,
+            title: "Lỗi",
+            message: "Không thể phê duyệt yêu cầu. Vui lòng thử lại.",
+            type: 'error'
+          });
+        }
+      }
+    });
   };
 
   // Kết thúc hoặc Từ chối yêu cầu
-  const handleClose = async (id: string) => {
+  const handleClose = (id: string) => {
     const actionText = tab === 'yeu-cau' ? "từ chối yêu cầu" : "kết thúc bản ghi";
-    if (!confirm(`Bạn có chắc chắn muốn ${actionText} này?`)) return;
     
-    try {
-      const endpoint = (tab === 'tam-tru' || tab === 'yeu-cau')
-        ? `/residence/temporary/${id}/close`
-        : `/residence/absence/${id}/close`;
-      
-      await api.patch(endpoint, { closeDate: new Date() }); 
-      alert("Thao tác thành công");
-      fetchData();
-    } catch (error) {
-      alert("Không thể thực hiện thao tác này.");
-    }
+    setModalConfig({
+      isOpen: true,
+      title: "Xác nhận thao tác",
+      message: `Bạn có chắc chắn muốn ${actionText} này?`,
+      type: 'confirm',
+      onConfirm: async () => {
+        try {
+          const endpoint = (tab === 'tam-tru' || tab === 'yeu-cau')
+            ? `/residence/temporary/${id}/close`
+            : `/residence/absence/${id}/close`;
+
+          await api.patch(endpoint, { closeDate: new Date() });
+          setModalConfig({
+            isOpen: true,
+            title: "Thành công",
+            message: "Thao tác đã được thực hiện thành công.",
+            type: 'success'
+          });
+          fetchData();
+        } catch (error) {
+          setModalConfig({
+            isOpen: true,
+            title: "Lỗi",
+            message: "Không thể thực hiện thao tác này.",
+            type: 'error'
+          });
+        }
+      }
+    });
   };
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6 font-google-sans">
+      {/* Modal Hệ thống thay thế Alert/Confirm */}
+      <Modal 
+        isOpen={modalConfig.isOpen} 
+        onClose={closeModal} 
+        title={modalConfig.title}
+        maxWidth="max-w-md"
+      >
+        <div className="text-center py-4">
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+            modalConfig.type === 'success' ? 'bg-green-100 text-green-600' : 
+            modalConfig.type === 'confirm' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'
+          }`}>
+            {modalConfig.type === 'success' ? <Check size={32} /> : 
+             modalConfig.type === 'confirm' ? <Clock size={32} /> : <X size={32} />}
+          </div>
+          <p className="text-gray-600 mb-6">{modalConfig.message}</p>
+          
+          <div className="flex gap-3 justify-center">
+            {modalConfig.type === 'confirm' ? (
+              <>
+                <button 
+                  onClick={closeModal}
+                  className="px-6 py-2 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all"
+                >
+                  Hủy
+                </button>
+                <button 
+                  onClick={() => { modalConfig.onConfirm?.(); closeModal(); }}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md"
+                >
+                  Xác nhận
+                </button>
+              </>
+            ) : (
+              <button 
+                onClick={closeModal}
+                className="px-8 py-2 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all"
+              >
+                Đóng
+              </button>
+            )}
+          </div>
+        </div>
+      </Modal>
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Biến động cư trú</h2>
           <p className="text-gray-500 text-sm italic">Quản lý tạm trú, tạm vắng và duyệt yêu cầu công dân</p>
         </div>
-        
+
         <div className="bg-white p-1.5 rounded-2xl border border-gray-100 flex gap-1 shadow-sm">
-          <button 
+          <button
             onClick={() => setTab('tam-tru')}
             className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${tab === 'tam-tru' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
           >
             Tạm trú
           </button>
-          <button 
+          <button
             onClick={() => setTab('tam-vang')}
             className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${tab === 'tam-vang' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
           >
             Tạm vắng
           </button>
-          <button 
+          <button
             onClick={() => setTab('yeu-cau')}
             className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${tab === 'yeu-cau' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
           >
-            <Inbox size={14}/> Yêu cầu mới
+            <Inbox size={14} /> Yêu cầu mới
           </button>
         </div>
       </div>
 
-      {/* Ô tìm kiếm (Chỉ hoạt động nếu Backend DTO có trường keyword) */}
       <div className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 relative">
         <Search className="absolute left-8 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-        <input 
+        <input
           type="text"
-          placeholder="Tìm kiếm..."
+          placeholder="Tìm kiếm theo tên hoặc CCCD..."
           className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -141,13 +224,12 @@ const ResidencePage = () => {
         ) : residenceList.length > 0 ? (
           residenceList.map((item: any) => (
             <div key={item._id} className="bg-white p-6 rounded-[2rem] border border-gray-100 flex flex-wrap md:flex-nowrap items-center gap-6 shadow-sm group hover:shadow-md transition-all">
-              
               <div className={`w-16 h-16 rounded-3xl flex items-center justify-center shrink-0 
-                ${tab === 'yeu-cau' ? 'bg-orange-50 text-orange-600' : 
+                ${tab === 'yeu-cau' ? 'bg-orange-50 text-orange-600' :
                   tab === 'tam-tru' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
                 <FileText size={32} />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-1">
                   <h4 className="text-lg font-bold text-gray-900 truncate">
@@ -161,17 +243,17 @@ const ResidencePage = () => {
                   )}
                 </div>
                 <p className="text-sm text-gray-600 font-medium mb-2">
-                    Địa chỉ: {item.diaChiTamTru || item.noiDen || "N/A"}
+                  Địa chỉ: {item.diaChiTamTru || item.noiDen || "N/A"}
                 </p>
                 <p className="text-xs text-gray-400 mb-2 italic">Lý do: {item.lyDo || "N/A"}</p>
-                
+
                 <div className="flex flex-wrap gap-4 text-xs text-gray-400 font-medium font-mono">
                   <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
-                    <Calendar size={14}/> 
+                    <Calendar size={14} />
                     Từ: {item.tuNgay ? new Date(item.tuNgay).toLocaleDateString('vi-VN') : '...'}
                   </span>
                   <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
-                    <Clock size={14}/> 
+                    <Clock size={14} />
                     Đến: {item.denNgay ? new Date(item.denNgay).toLocaleDateString('vi-VN') : '...'}
                   </span>
                 </div>
@@ -180,13 +262,13 @@ const ResidencePage = () => {
               <div className="flex items-center gap-3">
                 {tab === 'yeu-cau' ? (
                   <div className="flex gap-2">
-                    <button 
+                    <button
                       onClick={() => handleApprove(item._id)}
                       className="bg-green-600 text-white px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-green-700 flex items-center gap-2 shadow-sm"
                     >
                       <Check size={18} /> Duyệt
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleClose(item._id)}
                       className="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
                     >
@@ -201,7 +283,7 @@ const ResidencePage = () => {
                         <CheckCircle2 size={16} /> {item.trangThai === 'DA_DONG' ? 'Đã kết thúc' : 'Đang hiệu lực'}
                       </span>
                     </div>
-                    <button 
+                    <button
                       onClick={() => handleClose(item._id)}
                       disabled={item.trangThai === 'DA_DONG'}
                       className={`p-3 rounded-2xl transition-all ${item.trangThai === 'DA_DONG' ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600'}`}
@@ -216,8 +298,8 @@ const ResidencePage = () => {
           ))
         ) : (
           <div className="bg-white p-20 rounded-[3rem] border border-dashed border-gray-200 text-center flex flex-col items-center gap-4">
-             <Inbox size={40} className="text-gray-300" />
-             <p className="text-gray-400 font-medium font-google-sans">Hiện không có bản ghi hoặc yêu cầu nào.</p>
+            <Inbox size={40} className="text-gray-300" />
+            <p className="text-gray-400 font-medium font-google-sans">Hiện không có bản ghi hoặc yêu cầu nào.</p>
           </div>
         )}
       </div>

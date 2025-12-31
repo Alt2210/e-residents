@@ -9,7 +9,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ResidenceService } from './residence.service';
 import {
   IssueTemporaryResidenceDto,
@@ -33,17 +33,29 @@ import { Types } from 'mongoose';
 export class ResidenceController {
   constructor(private readonly residenceService: ResidenceService) {}
 
-  // ========== TẠM TRÚ ==========
+  // ========== TẠM TRÚ (TEMPORARY RESIDENCE) ==========
 
-  // Cấp giấy tạm trú
+  // Cấp giấy tạm trú hoặc Gửi yêu cầu tạm trú
   @Post('temporary')
   @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
+  @ApiOperation({ summary: 'Cấp mới hoặc gửi yêu cầu đăng ký tạm trú' })
   async issueTemporaryResidence(
     @Body() dto: IssueTemporaryResidenceDto,
     @Request() req: any,
   ) {
     const issuedByUserId = new Types.ObjectId(req.user.userId);
     return this.residenceService.issueTemporaryResidence(dto, issuedByUserId);
+  }
+
+  // Cập nhật trạng thái tạm trú (Duyệt/Từ chối/Hủy) - ĐỂ SỬA LỖI 404
+  @Patch('temporary/:id/status')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @ApiOperation({ summary: 'Duyệt hoặc từ chối yêu cầu tạm trú' })
+  async updateTemporaryStatus(
+    @Param('id') id: string,
+    @Body('trangThai') trangThai: string,
+  ) {
+    return this.residenceService.updateStatus(id, trangThai, 'temporary');
   }
 
   // Gia hạn giấy tạm trú
@@ -67,14 +79,26 @@ export class ResidenceController {
     return this.residenceService.searchTemporaryResidence(searchDto);
   }
 
-  // ========== TẠM VẮNG ==========
+  // ========== TẠM VẮNG (ABSENCE) ==========
 
-  // Cấp giấy tạm vắng
+  // Cấp giấy tạm vắng hoặc Gửi yêu cầu tạm vắng
   @Post('absence')
   @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO', 'CONG_DAN')
+  @ApiOperation({ summary: 'Cấp mới hoặc gửi yêu cầu khai báo tạm vắng' })
   async issueAbsence(@Body() dto: IssueAbsenceDto, @Request() req: any) {
     const issuedByUserId = new Types.ObjectId(req.user.userId);
     return this.residenceService.issueAbsence(dto, issuedByUserId);
+  }
+
+  // Cập nhật trạng thái tạm vắng (Duyệt/Từ chối/Hủy) - ĐỂ SỬA LỖI 404
+  @Patch('absence/:id/status')
+  @Roles('TO_TRUONG', 'TO_PHO', 'CAN_BO')
+  @ApiOperation({ summary: 'Duyệt hoặc từ chối yêu cầu tạm vắng' })
+  async updateAbsenceStatus(
+    @Param('id') id: string,
+    @Body('trangThai') trangThai: string,
+  ) {
+    return this.residenceService.updateStatus(id, trangThai, 'absence');
   }
 
   // Gia hạn giấy tạm vắng
@@ -98,4 +122,3 @@ export class ResidenceController {
     return this.residenceService.searchAbsence(searchDto);
   }
 }
-

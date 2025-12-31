@@ -6,6 +6,10 @@ export class TemporaryResidenceSearchDto {
   @IsOptional()
   personId?: string;
 
+  @IsString()
+  @IsOptional()
+  keyword?: string;
+
   @IsDateString()
   @IsOptional()
   fromDate?: string;
@@ -39,6 +43,10 @@ export class AbsenceSearchDto {
   @IsDateString()
   @IsOptional()
   fromDate?: string;
+
+  @IsString()
+  @IsOptional()
+  keyword?: string;
 
   @IsDateString()
   @IsOptional()
