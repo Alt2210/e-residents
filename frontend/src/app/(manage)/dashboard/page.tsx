@@ -47,7 +47,6 @@ export default function DashboardPage() {
   const [recentPersons, setRecentPersons] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- HÀM HỖ TRỢ KIỂM TRA ĐỘ TUỔI ---
   const isNewborn = (birthDate: string) => {
     if (!birthDate) return false;
     const today = new Date();
@@ -57,9 +56,8 @@ export default function DashboardPage() {
     return ageInYears < 1;
   };
 
-  // 1. Hàm chuyển đổi trạng thái sang Tiếng Việt có dấu (Đã cập nhật Mới sinh)
   const formatStatusText = (status: string, birthDate: string) => {
-    if (isNewborn(birthDate)) return "Mới sinh"; // Ưu tiên hiển thị Mới sinh
+    if (isNewborn(birthDate)) return "Mới sinh";
 
     switch (status) {
       case 'THUONG_TRU': return "Thường trú";
@@ -71,9 +69,8 @@ export default function DashboardPage() {
     }
   };
 
-  // 2. Hàm lấy màu sắc trạng thái (Đã cập nhật màu Hồng nhạt cho Mới sinh)
   const getStatusStyle = (status: string, birthDate: string) => {
-    if (isNewborn(birthDate)) return "bg-pink-100 text-pink-700"; // Màu hồng cho trẻ mới sinh
+    if (isNewborn(birthDate)) return "bg-pink-100 text-pink-700";
 
     switch (status) {
       case 'THUONG_TRU': return "bg-green-100 text-green-700";
@@ -109,7 +106,6 @@ export default function DashboardPage() {
           unresolvedFeedbacks: (feedbackStats['MOI_GHI_NHAN'] || 0) + (feedbackStats['DANG_XU_LY'] || 0)
         });
 
-        // Biểu đồ tròn cư trú
         const thuongTruCount = (popRes.data.total || 0) - (tempRes.data.residencesActive || 0);
         setResidenceTypeData({
           labels: ['Thường trú', 'Tạm trú', 'Tạm vắng'],
@@ -119,7 +115,6 @@ export default function DashboardPage() {
           }]
         });
 
-        // Biểu đồ Line biến động
         setPopulationTrendData({
           labels: ['2005', '2010', '2015', '2020', '2025'],
           datasets: [
@@ -163,7 +158,11 @@ export default function DashboardPage() {
       <div className="p-8 overflow-y-auto">
         <h2 className="text-2xl font-bold text-gray-800 mb-8">Bảng điều khiển</h2>
 
-        {/* ... (Các phần StatCard và Biểu đồ giữ nguyên) ... */}
+        {/* --- Phần mới thêm: Tổng nhân khẩu và Tổng số hộ --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <StatCard label="Tổng nhân khẩu" value={stats.totalPersons} color="bg-blue-600" />
+          <StatCard label="Tổng số hộ khẩu" value={stats.totalHouseholds} color="bg-indigo-600" />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatCard label="Phản ánh mới" value={stats.newFeedbacks} color="bg-red-500" />
@@ -229,7 +228,6 @@ export default function DashboardPage() {
                     <td className="px-6 py-4 font-medium text-gray-900">{person.hoTen}</td>
                     <td className="px-6 py-4 text-gray-500 font-mono">{person.soCCCD || "Chưa có"}</td>
                     <td className="px-6 py-4">
-                      {/* Truyền thêm ngaySinh vào hàm để kiểm tra điều kiện Mới sinh */}
                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${getStatusStyle(person.trangThai, person.ngaySinh)}`}>
                         {formatStatusText(person.trangThai, person.ngaySinh)}
                       </span>
