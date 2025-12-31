@@ -149,7 +149,7 @@ const EditCitizenPage = () => {
           <div className="space-y-4">
             <h3 className="font-bold text-gray-900 border-l-4 border-blue-600 pl-3">Cư trú & Nghề nghiệp</h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ID Hộ khẩu (MongoDB ID) *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ID Hộ khẩu *</label>
               <input required name="householdId" value={formData.householdId} onChange={handleChange} className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
