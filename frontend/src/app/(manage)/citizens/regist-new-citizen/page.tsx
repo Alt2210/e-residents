@@ -136,7 +136,7 @@ const RegistNewCitizenPage = () => {
                 name="hoTen"
                 value={formData.hoTen}
                 onChange={handleChange}
-                className="w-full p-3 bg-gray-50 border-none rounded-xl font-black focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -150,7 +150,7 @@ const RegistNewCitizenPage = () => {
                   name="ngaySinh"
                   value={formData.ngaySinh}
                   onChange={handleChange}
-                  className="w-full p-3 bg-gray-50 border-none rounded-xl font-black focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -161,7 +161,7 @@ const RegistNewCitizenPage = () => {
                   name="gioiTinh"
                   value={formData.gioiTinh}
                   onChange={handleChange}
-                  className="w-full p-3 bg-gray-50 border-none font-black rounded-xl focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 bg-gray-50 border-none  rounded-xl focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Nam">Nam</option>
                   <option value="Nữ">Nữ</option>
@@ -177,7 +177,7 @@ const RegistNewCitizenPage = () => {
                 name="soCCCD"
                 value={formData.soCCCD}
                 onChange={handleChange}
-                className="w-full p-3 bg-gray-50 border-none rounded-xl font-black focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-blue-500"
                 placeholder="12 số"
               />
             </div>
@@ -197,7 +197,7 @@ const RegistNewCitizenPage = () => {
                 name="householdId"
                 value={formData.householdId}
                 onChange={handleChange}
-                className="w-full p-3 bg-gray-50 border-none rounded-xl font-black focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-blue-500"
                 placeholder="Ví dụ: HK001"
               />
               <p className="text-[10px] text-gray-400 mt-1 italic">
@@ -213,7 +213,7 @@ const RegistNewCitizenPage = () => {
                 name="quanHeVoiChuHo"
                 value={formData.quanHeVoiChuHo}
                 onChange={handleChange}
-                className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 font-black focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2  focus:ring-blue-500"
                 placeholder="Vợ, con, cháu..."
               />
             </div>
@@ -225,7 +225,7 @@ const RegistNewCitizenPage = () => {
                 name="ngheNghiep"
                 value={formData.ngheNghiep}
                 onChange={handleChange}
-                className="w-full p-3 bg-gray-50 border-none rounded-xl font-black focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-none rounded-xl  focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -236,7 +236,7 @@ const RegistNewCitizenPage = () => {
                 name="danToc"
                 value={formData.danToc}
                 onChange={handleChange}
-                className="w-full p-3 bg-gray-50 border-none font-black rounded-xl focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-none  rounded-xl focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>

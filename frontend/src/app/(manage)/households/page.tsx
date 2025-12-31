@@ -113,7 +113,7 @@ const HouseholdsPage = () => {
           <input
             type="text"
             placeholder="Tìm theo mã hộ khẩu, tên chủ hộ hoặc địa chỉ..."
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 font-black focus:ring-blue-500 transition-all shadow-inner"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2  focus:ring-blue-500 transition-all shadow-inner"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

@@ -97,7 +97,7 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700">Tên đăng nhập</label>
               <input 
                 type="text" required 
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg font-black focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500 outline-none"
                 onChange={(e) => setFormData({...formData, username: e.target.value})}
               />
             </div>
@@ -105,7 +105,7 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700">Email</label>
               <input 
                 type="email" required 
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg font-black focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500 outline-none"
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
               />
             </div>
@@ -113,7 +113,7 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
               <input 
                 type="password" required 
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg font-black focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500 outline-none"
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
               />
             </div>
@@ -121,7 +121,7 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700">Xác nhận mật khẩu</label>
               <input 
                 type="password" required 
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg font-black focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500 outline-none"
                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
               />
             </div>

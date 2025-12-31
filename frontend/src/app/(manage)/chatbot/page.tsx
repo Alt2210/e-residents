@@ -104,7 +104,7 @@ const ChatbotPage = () => {
             <Bot size={28} />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">Trợ lý ảo AI</h2>
+            <h2 className="text-2xl  text-gray-900 tracking-tight">Trợ lý ảo AI</h2>
             <div className="flex items-center gap-1.5">
               <span className={`w-2 h-2 ${loading ? 'bg-orange-500 animate-bounce' : 'bg-green-500'} rounded-full`}></span>
               <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -167,7 +167,7 @@ const ChatbotPage = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Hỏi tôi về dân số, hộ khẩu hoặc thủ tục..."
-                className="w-full pl-6 pr-12 py-4 bg-white border-none rounded-3xl shadow-sm focus:ring-2 font-black focus:ring-blue-500 outline-none text-sm font-medium"
+                className="w-full pl-6 pr-12 py-4 bg-white border-none rounded-3xl shadow-sm focus:ring-2  focus:ring-blue-500 outline-none text-sm font-medium"
               />
               <button
                 onClick={handleSendMessage}

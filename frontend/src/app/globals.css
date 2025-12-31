@@ -26,5 +26,6 @@ body {
 }
 
 input, textarea, select {
-  color: #171717; /* Hoặc #000000 - Luôn đen bất kể chế độ */
+  color: #171717; 
+  font-weight: 300;
 }

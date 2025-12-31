@@ -184,7 +184,7 @@ const CitizensPage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Tìm theo tên, số CCCD..."
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none font-black rounded-2xl focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none  rounded-2xl focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>

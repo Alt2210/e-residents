@@ -104,7 +104,7 @@ export default function LoginPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg font-black focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 placeholder="Tên của bạn"
               />
             </div>
@@ -116,14 +116,14 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg font-black focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 placeholder="••••••••"
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <input type="checkbox" className="h-4 w-4 text-blue-600 font-black border-gray-300 rounded" />
+                <input type="checkbox" className="h-4 w-4 text-blue-600  border-gray-300 rounded" />
                 <label className="ml-2 block text-sm text-gray-900">Ghi nhớ đăng nhập</label>
               </div>
               <Link href="#" className="text-sm text-blue-600 hover:underline">Quên mật khẩu?</Link>

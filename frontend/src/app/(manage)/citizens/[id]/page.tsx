@@ -75,7 +75,7 @@ const CitizenDetailPage = () => {
               {citizen.hoTen?.charAt(0) || "?"}
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight">{citizen.hoTen}</h1>
+              <h1 className="text-3xl  tracking-tight">{citizen.hoTen}</h1>
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusStyle(citizen.trangThai)}`}>
                   {citizen.trangThai}
